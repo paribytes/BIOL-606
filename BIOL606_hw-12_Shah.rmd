@@ -1,0 +1,137 @@
+---
+title: "BIOL606_hw12_Shah.rmd"
+author: "Priyanshi Shah"
+date: "2023-04-05"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(dplyr)
+library(boot)
+```
+
+#HOMEWORK HOMEWORK HOMEWORK HOMEWORK  
+
+#Task 1:
+
+#Using only the data for the ‘hot’ temperature treatment, compare the shell growth of the Crab and No-Crab treatment levels, using a permutation routine
+#Your code should load the data, carry out 9999 permutations (+1 original value), calculate the permuted difference in medians, and 95% confidence interval derived from the permuted differences
+#Is the observed difference in median growth of the two groups significantly different than what we would expect by random chance (i.e. if the two groups weren’t different)? Write your answer in your .Rmd file.
+```{r}
+#loading the data
+snail <- read.csv("SnailGrowth.csv", header = TRUE)
+#View(snail)
+
+hot <- subset(snail, snail$Temperature == "hot", c("Crab", "ShellGrowth.mg"))
+hot <- na.omit(hot)
+#View(hot)
+
+```
+
+Calculate summary statistics
+```{r summaryStats}
+# Calculate medians
+shellmedian = aggregate(ShellGrowth.mg~Crab, data = hot, FUN = median)
+# Calculate sd
+shellsd = aggregate(ShellGrowth.mg~Crab, data = hot, FUN = sd)
+
+# Calculate absolute difference in the means
+shelldiff = abs(shellmedian$ShellGrowth.mg[1] - shellmedian$ShellGrowth.mg[2])
+```
+
+```{r}
+# Create a barplot of mean + 1 SD 
+ 
+p = barplot(height = shellmedian$ShellGrowth.mg, names.arg = shellmedian$Crab, 
+		col = c('firebrick','forestgreen'), ylim = c(0,80), las = 1,
+		ylab = 'Crab Shell Growth, mg', 
+		cex.axis = 1.2, cex.lab = 1.2, cex.names = 1.2)
+# Create error bars showing +/- 1SD
+arrows(x0 = p, x1 = p, y0 = shellmedian$ShellGrowth.mg-shellsd$ShellGrowth.mg,
+		y1 = shellmedian$ShellGrowth.mg + shellsd$ShellGrowth.mg, code = 3, angle = 90, lwd =2)
+
+```
+
+
+
+Carry out 9999 randomizations of the Crab and no-crab treatment mixing
+them up among the two groups. 
+
+```{r randomization9999}
+absdiffs = vector(mode='numeric', length = 10000)
+absdiffs[1] = shelldiff
+
+for (i in 2:10000){
+	temp = hot
+	temp$ShellGrowth.mg = sample(hot$ShellGrowth.mg,size = nrow(hot), replace=FALSE)
+	temp2median = aggregate(ShellGrowth.mg~Crab, data = temp, FUN = median)
+	dif = abs(temp2median$ShellGrowth.mg[1] - temp2median$ShellGrowth.mg[2])
+	absdiffs[i] = dif  
+}
+
+```
+
+Calculate the median of the randomized differences:
+```{r randomizationMean}
+median(absdiffs)
+```
+```{r hotPvalue}
+#####################
+# Order the absolute differences and figure out what the upper 5% point is
+absdiffs = absdiffs[order(absdiffs)]
+# Calculate the index for the 5% point
+indx = floor(length(absdiffs) * 0.95)  # Should be 9500 for a 10000 sample run
+# indx = 9500 # Alternately, if you definitely always have 10000 values
+
+# See what the difference value is at indx
+absdiffs[indx]
+equalgreater = length(which(absdiffs >= shelldiff))
+# And calculate the probability by dividing by sample size
+pvalue = equalgreater/length(absdiffs)
+pvalue
+
+#The observed difference in median growth of the two groups significantly different than what we would expect by random chance as the p-value is 1e-04 which is less than 0.05.
+
+#Which means that the probability of finding the observed difference by chance is 0.0001.
+```
+
+
+#Task 2:
+
+#Use the boot() and boot.ci() functions to estimate the mean shell growth and BCa 95% confidence intervals for the Ambient temperature, No-Crab treatment group, based on 9999 resamples.
+
+#Your code should print out the observed mean and BCa 95% confidence intervals
+```{r bootpackage}
+
+# subset the data frame based on conditions for Temperature and Crab columns and select ShellGrowth.mg column
+ambient <- subset(snail, Temperature == "ambient" & Crab == "no crab", c("ShellGrowth.mg"))
+ambient <- na.omit(ambient)
+print(ambient)
+
+myfun = function(x,i){
+	# Generate a sample d from the input data x. The value i is a set of 
+	# indices in the input data x. i is what the boot() function will use
+	# as its random samples
+	d = x[i]
+	# Calculate the median of each resample d.
+    mymean = mean(d)
+	# Also calculate the variance of each resample d 
+	# (only necessary for Studentized 95% CI)
+	myvar = var(d)
+	# Return both the statistic of interest (mean here) and the variance
+	# of that statistic (used to generate studentized bootstrap confidence 
+	# intervals later)
+	return(c(mymean,myvar))
+}
+
+# Then carry out the bootstrap using the boot() function
+myboot = boot(data = ambient$ShellGrowth.mg, statistic = myfun, R = 9999)
+myboot  # Display the results
+# Calculate the bootstrap confidence intervals around the mean. By default
+# this will calculate 5 different types of confidence interval. 
+mybootci = boot.ci(myboot, conf = 0.95)
+# Display confidence intervals
+mybootci
+#observed mean is 65.02139 
+# BCa 95% confidence interval = (55.94, 75.68 )  
+```

@@ -1,0 +1,128 @@
+---
+title: "BIOL606_hw_Lec06_Shah.rmd"
+output: html_document
+date: "2023-02-06"
+---
+
+```{r setup, include=FALSE}
+library(ggplot2)
+library(dplyr)
+library(ggfortify)
+```
+
+#Lecture
+```{r}
+turtles <- read.csv("turtleponds.csv")
+turtleplot <- ggplot(turtles, aes(x=depth, y=turtlecount)) +
+geom_point() +
+theme_bw()
+turtleplot
+
+```
+
+```{r}
+
+#Poisson example:
+#Research question: Does lifetime reproductive success increase with body size in Soay sheep?
+
+soay <- read.csv("SoaySheepFitness.csv") #imported the dataset
+str(soay)
+glimpse(soay)
+
+#Plot reproduction against body size. What is a general pattern? #reproduction means fitness
+ggplot(soay, aes(x = body.size, y = fitness)) +
+geom_point() +
+geom_smooth(method = "lm", se = FALSE) +
+geom_smooth(span = 1, colour = "red", se = FALSE) +
+xlab("Body mass (kg)") + ylab("Lifetime fitness")
+
+model1 <- lm(fitness ~ body.size, data= soay)
+autoplot(model1)
+
+```
+
+HOMEWORK HOMEWORK HOMEWORK HOMEWORK HOMEWORK HOMEWORK HOMEWORK HOMEWORK HOMEWORK HOMEWORK HOMEWORK HOMEWORK HOMEWORK HOMEWORK HOMEWORK HOMEWORK
+```{r}
+#Que. 1 Answer the question:  Is the total number of fruits produced affected by herbivore damage to leaves (i.e., "leafdamage") and hand-pollination treatments? (Start with a general linear model and proceed from there)
+
+cdata <- read.csv("lecture5_cucumberdamage.csv")
+cdata
+str(cdata) #gives the structure of the dataset
+glimpse(cdata) #gives a more thorough structure
+
+#Hypothesis: The total number of fruits produced is dependent on the herbivore damage to the leaves (i.e., "leafdamage") and hand pollination treatments
+
+lm_model1 <- lm (totalfruits ~ leafdamage * pollination, data = cdata) #interactive model 
+lm_model1
+
+autoplot(lm_model1)
+
+poisson_model <- glm(totalfruits ~ leafdamage * pollination, data = cdata, family = poisson) #look at the residual deviance, which is why we would use quasipoisson plots
+poisson_model
+
+anova(poisson_model)
+anova(poisson_model, test = "Chi")
+
+summary(poisson_model)
+
+q_model <- glm(totalfruits ~ leafdamage * pollination, data = cdata, family = quasipoisson)
+q_model
+
+anova(q_model, test = "F")
+```
+
+
+```{r}
+#Make a figure of the results, with separate lines for the two pollination treatments. 
+
+#fruits, leafdamage, pollination
+
+graph1 <- ggplot(cdata, aes(x = totalfruits, y = leafdamage, color = pollination )) + geom_point(size=2) + geom_smooth(method = "lm", se = FALSE) + geom_smooth(span = 1, colour = "red", se = FALSE)+ labs(x= "Number of total fruits", y="Leaf damage")+ theme_classic()
+
+graph1 
+
+```
+
+```{r}
+#Repeat steps 1 and 2, but instead of "leafdamage," use the categorical treatment variable "herbivory". Think about what the figure will look like for this scenario.
+
+cdata2 <- read.csv("lecture5_cucumberdamage.csv")
+#View(cdata2)
+cdata2
+str(cdata2) #gives the structure of the dataset
+glimpse(cdata2) #gives a more thorough structure
+
+#Hypothesis: The total number of fruits produced is dependent on the herbivory and hand pollination treatments
+
+lm_model2 <- lm (totalfruits ~ herbivory * pollination, data = cdata2) #interactive model 
+lm_model2
+
+autoplot(lm_model2)
+
+poisson_model2 <- glm(totalfruits ~ herbivory * pollination, data = cdata2, family = poisson) #look at the residual deviance, which is why we would use quasipoisson plots
+poisson_model2
+
+anova(poisson_model2)
+anova(poisson_model2, test = "Chi")
+
+summary(poisson_model2)
+
+q_model2 <- glm(totalfruits ~ herbivory * pollination, data = cdata2, family = quasipoisson)
+q_model2
+
+anova(q_model2, test = "F")
+
+
+graph2 <- ggplot(cdata2, aes(x = totalfruits, y = herbivory, color = pollination )) +
+geom_point(size=2) +
+geom_smooth(method = "lm", se = FALSE) +
+geom_smooth(span = 1, colour = "Purple", se = FALSE)+ labs(x= "Number of total fruits", y="Herbivory")+ theme_classic()
+
+graph2
+
+graph_better <- ggplot(cdata2, aes(x = herbivory, y= totalfruits, color=pollination)) + geom_boxplot() + 
+  labs(x="Herbivory", y="Number of total fruits")+ theme_gray() 
+
+graph_better
+
+```

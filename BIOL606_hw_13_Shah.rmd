@@ -1,0 +1,78 @@
+---
+title: "BIOL606_hw_13_Shah.rmd"
+author: "Priyanshi Shah"
+date: "2023-04-05"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(Hotelling)
+```
+
+```{r}
+data(bottle.df)
+
+bottle1 = bottle.df[bottle.df$Number == 1,-1]
+bottle2 = bottle.df[bottle.df$Number == 2,-1]
+
+colMeans(bottle1)
+colMeans(bottle2)
+
+print(hotelling.test(x=bottle1,y=bottle2))
+
+#centroid is the mean of the group of means (x,y or even z!)
+#hotelresult = hotteling.test(x=bottle1[,2:6]),(y = bottle2[,2:6])
+```
+
+```{r}
+data("iris")
+#Dimensions don't differ in different species 
+#some(iris)
+
+library(car)
+man1 = manova(cbind(Sepal.Length, Sepal.Width)~Species, data = iris)
+summary(man1)
+
+#P<0.05, three species differentiate significantly in their mean centroids. 
+
+summary.aov(man1)
+```
+
+```{r}
+root <- read.table("root.txt", header = TRUE)
+#View(root)
+
+root$Tree.Number = as.factor(root$Tree.Number)
+rootman = manova(cbind(Girth.4.Yr,Ext.Growth.4.Yr,Girth.15.Yr,Weight.15.Yr)~Tree.Number, data = root)
+summary(rootman)
+
+summary.aov(rootman)
+```
+
+```{r}
+library(mvnTest)
+DH.test(data = iris[iris$Species=='versicolor',1:4])
+```
+
+```{r}
+#04/10/2023
+
+#Principal Components Analysis (PCA)
+#Principal Coordinates Analysis (PCoA)
+
+#Standardized scale
+
+#Component 1 would encompass the most variation in the data set 
+#If you are analyzing 3 variables, you will get 3 components back from PCA
+
+#loading = weighting 
+
+```
+
+
+
+
+
+
+

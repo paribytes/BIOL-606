@@ -1,0 +1,67 @@
+---
+title: "BIOL606_hw_9_Shah.rmd"
+author: "Priyanshi Shah"
+date: "2023-03-01"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(dplyr)
+library(tidyverse)
+library(nlme)
+```
+
+
+#### CLASS 
+```{r}
+#continuous IV so, Anova type-3 because of unbalanced and an interaction
+#ML is maximum likelihood
+nesteddata <- read.csv("soil_herbivory_nested.csv", header = T)
+View(nesteddata)
+
+nesteddata$plot <- as.factor(nesteddata$plot)
+nesteddata$subplot <- as.factor(nesteddata$subplot)
+
+str(nesteddata) #looking at the structure of the data
+
+m1 <- lme(biomass ~ soil * herbivory, random = ~1|plot, data=nesteddata, method = "ML")
+
+m2 <- lme(biomass ~ soil * herbivory, random = ~1|plot/subplot, data=nesteddata, method = "ML")
+
+anova(m1)
+summary(m1)
+
+anova(m2)
+summary(m2)
+
+```
+
+
+```{r}
+# Dependent variable: N_ppm
+#Independent variable1 : veg
+#Independent variable2 : treatment
+
+# na.action = na.omit
+
+exdata <- read.csv("exotic_removal_data.csv", header = T, na.strings = ".") #importing the dataset
+
+exdata$plot <- as.factor(exdata$plot) #using as.factor because otherwise R wouldn't understand that plots are not just numbers 
+
+View(exdata) #just checking out the data
+
+str(exdata) #looking at the structure of the data
+
+exlme <- lme(N_ppm ~ veg * treatment + day_num, random = ~1|plot, data = exdata, na.action = na.omit, method = "ML")
+
+summary(exlme)
+
+#what is -0.01562 value telling us? that's the slope, day_num is a continuous number so that is the slope
+#for every one day the response variable decreases by 0.01562
+
+#how can you log transform time?
+#can treat time as categorical if time resets everytime 
+
+```

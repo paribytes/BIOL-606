@@ -1,0 +1,124 @@
+---
+title: "BIOL606_hw16_Shah.rmd"
+author: "Priyanshi Shah"
+date: "2023-04-17"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(vegan)
+library(FactoMineR)
+library(ggfortify)
+library(factoextra)
+```
+
+#HOMEWORK 
+
+Info on the data:
+File contains data for 37 sites, surveyed for maximum abundance of 102 bird species in Australia
+Column 2 contains habitat type, divided into 6 types:
+Gippsland manna gum, montane forest, woodland, box-ironbark, river redgum, and mixed forest
+
+```{r}
+bird <- read.csv("macnally_full2.csv", header = TRUE, row.names = 1) #Loading the data
+View(bird) #Just checking out
+bird$HABITAT = factor(bird$HABITAT)
+#So we have total 103 columns 
+
+```
+
+Run a NMDS on the bird data (macnally_full2.csv, leave out columns 1&2, SITE + HABITAT), using Bray-Curtis as the distance metric with the vegan metaMDS function
+```{r}
+#I can leave out columns 1 and 2 in two ways:
+# by doing the (bird[,c(-1,-2)] or by selecting just the columns from 3 to 103 (in this case)
+
+bird.nmds = metaMDS(bird[, c(3:103)], distance = 'bray', k = 2, trace = 0)
+bird.nmds 
+
+
+```
+
+
+Generate a NMDS ordination plot showing the sites only (no species arrows), and draw ellipsoid hulls around each of the 6 habitat types to show how habitat maps onto the ordination.
+Color the site points by HABITAT type (column 2 of data frame)
+
+Use the ordiellipse() function, and the groups argument should be defined using the HABITAT data in column 2 of the data frame
+Include a legend in the plot to show which point color maps to which habitat type
+```{r}
+
+bird_plot = ordiplot(bird.nmds, type='none', 
+		main = paste0('Stress = ',round(bird.nmds$stress,dig=3)))
+
+ordiellipse(bird.nmds,kind='ehull',draw="polygon",
+		groups=bird$HABITAT,label=F, col = 1:6)
+
+points(bird_plot, what = 'sites', pch = 20, col = as.numeric(bird$HABITAT)) 
+
+legend('topleft',legend=levels(bird$HABITAT), col = 1:6,
+		pch = 20, cex = 0.7)
+
+```
+
+#Based on your plot, describe which (if any) of the habitats differ in community composition
+#Except for "Box-Ironbark" and "River Red Gum", all the other habitats are somewhat clumped together in the community composition. 
+
+
+
+
+#CLASS WORK 
+
+```{r}
+veg <- read.table("bryceveg.txt", header = TRUE, row.names = 1)
+
+site <- read.table("brycesite.txt", header = TRUE, row.names= 1)
+
+
+bc.nmds = metaMDS(veg, distance = 'bray', k =2, trace = 0)
+
+bc.nmds 
+
+#stress values below 0.2 are good, below 0.1 very good, 0 = excellent 
+#stress value tells you how well your multidimensional data matched upon the 2-D one 
+
+```
+
+```{r}
+p1 = ordiplot(bc.nmds, type = 'none', 
+              main = paste0('Stress = ',
+                      round(bc.nmds$stress, dig= 3)))
+
+points(p1, what = 'sites')
+legend('bottomright', legend = c('Sites'),
+       col = c('black'),
+       pch = c(1, 20))
+
+
+points(p1, what = 'species', col = 'red',
+       pch = 20) #add species in red
+
+text(p1, what = 'species', col = 'red',
+     adj= c(0,1), cex = 0.7) #text labels 
+```
+
+
+```{r}
+#final copy paste
+
+#I believe log-transformation is needed. so
+#cols_to_transform <- c(2:15)
+
+#wasp_data[cols_to_transform] <- apply(wasp_data[cols_to_transform], 2, log)
+
+#write.csv(wasp_data, "wasp_log.csv", row.names = FALSE)
+
+#NMDS
+#waspnmds = metaMDS(wasp_data[,-1], distance='euclidean', k = 2, trace = 0)
+#waspnmds
+```
+
+
+
+
+
+

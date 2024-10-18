@@ -1,0 +1,51 @@
+---
+title: "BIOL606_Presentation_1_Pradhan&Shah"
+output: html_document
+date: "2023-02-11"
+---
+
+```{r setup, include=FALSE}
+library(ggplot2)
+library(dplyr)
+library(ggfortify)
+```
+
+
+```{r}
+#Importing the dataset
+soildata <- read.csv("Soil_data.csv")
+soildata
+
+head(soildata) 
+```
+
+```{r}
+
+
+
+
+```
+
+```{r}
+
+
+
+
+```
+
+```{r}
+
+
+
+
+
+```
+
+```{r}
+
+
+
+
+
+```
+

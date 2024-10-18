@@ -1,0 +1,89 @@
+---
+title: "BIOL606_hw15_Shah.rmd"
+author: "Priyanshi Shah"
+date: "2023-04-17"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(FactoMineR)
+library(ggfortify)
+library(factoextra)
+library(vegan)
+```
+
+
+Visualize the data distribution for each compound. Should you log transform the data?
+```{r}
+#loading the data
+dolphin <- read.csv("Trego2018.csv", header = TRUE)
+View(dolphin) #Yup, Perfect
+#head(dolphin)
+
+#histogram of distribution for each variable
+for(col in names(dolphin[3:35])){
+  hist(dolphin[[col]], xlab=col,main = paste("Distribution of compound" , col))
+}
+
+#I believe log-transformation is needed. so
+#cols_to_transform <- c(3:35)
+
+#dolphin[cols_to_transform] <- apply(dolphin[cols_to_transform], 2, log)
+
+#write.csv(dolphin, "dolphin_log_transformed.csv", row.names = FALSE)
+
+
+```
+
+Perform a PCA (i.e. PCoA using Euclidean distance)
+```{r}
+#leaving the first and second columns out because Columns 1 & 2 list ID and maturity (immature or mature)
+#Columns 3:35 list relative abundance of each halogenated organic compound
+
+#dolphin_log_transformed <- read.csv("dolphin_log_transformed.csv", header = TRUE)
+
+dolphin.pca=prcomp(dolphin[,c(-1,-2)], center=TRUE, scale.= TRUE)# initial PCoA minus the first 2 columns 
+summary(dolphin.pca)
+
+```
+
+Show the relationship between the dolphins and the compounds using a biplot
+```{r}
+#There are total 33 variables so expect a lot of overlapping and difficulty in visualization 
+biplot(dolphin.pca, cex = c(1,1.3), xlab = "PC1", ylab = "PC2") 
+
+
+```
+
+Find the most important compounds with the help of a contribution plot (fviz_contrib), subset the data and re-run PCA with only those compounds that fall above the red line on the contribution plot
+```{r}
+
+fviz_contrib(dolphin.pca, choice="var", axes = 1 ) #visualizing which variables are important for the analysis
+
+#will now remove all the variables under the red line and keep that fall ABOVE the red line 
+
+dolphin_up=dolphin[,!(names(dolphin) %in% c("Chlorinated.benzene","Unknown.3","Unknown.5","MBP","DMBP","Brominated.anisole","MeO.PBB","Brominated.indole","Pyrrolidinecarbonyl.chloride","PBHD","HCH.related","B.CDE","Chlorobenzaldehyde","Unknown.6","Unknown"))]
+
+#Will re-run PCA with only the important compounds
+
+dolphin.pca2=prcomp(dolphin_up[,c(-1,-2)], center=TRUE, scale.= TRUE)
+summary(dolphin.pca2)#PC1 contributes 70% of the variability in the model(!)
+dolphin.pca2 #MeO.B.CDE and MeO.BDE were the main drivers of PC1, meaning the are the most deterministic variables
+
+
+```
+
+
+Evaluate their contribution to PC1 and PC2 using a biplot (fviz_pca_biplot). Color the two dolphin maturity classes on the biplot and include a convex hull around the two classes of dolphins. Suppress the arrows for the variables (compounds), only show the variable locations and text labels.
+```{r}
+
+fviz_pca_biplot(dolphin.pca2, col.ind = as.factor(dolphin_up$Maturity), addEllipses = TRUE, arrow.var=FALSE)
+ 
+```
+
+Based on the final biplot, are different compounds associated more with immature than mature dolphins? Write your answer in the R code as a comment or in text outside the R code chunk.
+
+#Immature dolphins are falling on the right side of the graph, and Meo B CDE and Meo BDE compounds are contributing the most to the PC1. So, it can be said that between immature and mature dolphins, immature dolphins will have more Meo B CDE and Meo BDE compound values than the mature ones. 
+
+

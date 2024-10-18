@@ -1,0 +1,172 @@
+---
+title: "BIOL606_hw_14_Shah.rmd"
+author: "Priyanshi Shah"
+date: "2023-04-12"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(vegan)
+library(ggfortify)
+```
+
+```{r}
+ant <- read.csv("AntPresenceAbsence.csv", header = TRUE, row.names = 1)
+head(ant) 
+
+ant.dist = vegdist(ant[,-1], method = "bray", binary = FALSE)
+
+bc.ants = cmdscale(ant.dist, eig = TRUE)
+
+dimnames(bc.ants$points)[(1)] = ant$Site
+autoplot(bc.ants, label = TRUE, xlab = 'PCO 1', ylab = 'PCO 2')+
+  theme(axis.text=element_text(size=18),
+        axis.title=element_text(size=18, face="bold"))
+
+#principal component with euclidian distance would be appropriate
+#leave column 1 and 2 out
+
+#Using the euclidian distance already makes it the PCA 
+#1.) histogram for each of 14 samples for 35 variables, and see if they're equally/somewhat normally distributed or not. Then decide if you should do the log transform the data or not?
+#2.) keep the important stuff in and filter out all the rest data
+#prcomp function
+
+
+#FINAL PRESENTATION: Multivariate data analysis, can use PCA PCoA, NMDS 
+#Introduction of the data, data collection, methods to analyze, exploration of the data, talk about the results, make a slide deck that is a professional looking, appropriate references, dressing up for it is not essential, but def talk professionally 
+```
+
+```{r}
+#another approach
+
+dolphin$B.CDE = log(dolphin$B.CDE)
+dolphin$Brominated.anisole = log(dolphin$Brominated.anisole)
+dolphin$Brominated.indole = log(dolphin$Brominated.indole)
+dolphin$Chlordane.related = log(dolphin$Chlordane.related)
+dolphin$Chlorinated.benzene = log(dolphin$Chlorinated.benzene)
+dolphin$Chlorinated.styrene = log(dolphin$Chlorinated.styrene)
+dolphin$Chlorobenzaldehyde = log(dolphin$Chlorobenzaldehyde)
+dolphin$DDT.related = 
+hist(dolphin$Dichlorobenzophenone) = 
+hist(dolphin$DMBP) = 
+hist(dolphin$HCH.related) = 
+hist(dolphin$Heptachlor.related)
+hist(dolphin$MBP)
+hist(dolphin$MeO.B.CDE)
+hist(dolphin$MeO.BDE)
+hist(dolphin$MeO.PBB)
+hist(dolphin$Methylenebistrichloroanisole)
+hist(dolphin$Methylsulfonyl.PCB)
+hist(dolphin$Mirex.related)
+hist(dolphin$PBB)
+hist(dolphin$PBDE)
+hist(dolphin$PBHD)
+hist(dolphin$Pyrrolidinecarbonyl.chloride)
+hist(dolphin$TCPM)
+hist(dolphin$TCPMOH)
+hist(dolphin$Unknown)
+hist(dolphin$Unknown.2)
+hist(dolphin$Unknown.3)
+hist(dolphin$Unknown.4)
+hist(dolphin$Unknown.5)
+hist(dolphin$Unknown.6)
+hist(dolphin$Unknown.7)
+hist(dolphin$Unknown.8)
+
+#Checking the distribution of the data
+hist(dolphin$B.CDE)
+hist(dolphin$Brominated.anisole)
+hist(dolphin$Brominated.indole)
+hist(dolphin$Chlordane.related)
+hist(dolphin$Chlorinated.benzene)
+hist(dolphin$Chlorinated.styrene)
+hist(dolphin$Chlorobenzaldehyde)
+hist(dolphin$DDT.related)
+hist(dolphin$Dichlorobenzophenone)
+hist(dolphin$DMBP)
+hist(dolphin$HCH.related)
+hist(dolphin$Heptachlor.related)
+hist(dolphin$MBP)
+hist(dolphin$MeO.B.CDE)
+hist(dolphin$MeO.BDE)
+hist(dolphin$MeO.PBB)
+hist(dolphin$Methylenebistrichloroanisole)
+hist(dolphin$Methylsulfonyl.PCB)
+hist(dolphin$Mirex.related)
+hist(dolphin$PBB)
+hist(dolphin$PBDE)
+hist(dolphin$PBHD)
+hist(dolphin$Pyrrolidinecarbonyl.chloride)
+hist(dolphin$TCPM)
+hist(dolphin$TCPMOH)
+hist(dolphin$Unknown)
+hist(dolphin$Unknown.2)
+hist(dolphin$Unknown.3)
+hist(dolphin$Unknown.4)
+hist(dolphin$Unknown.5)
+hist(dolphin$Unknown.6)
+hist(dolphin$Unknown.7)
+hist(dolphin$Unknown.8)
+
+#uh oh yup, log-transformation is needed
+
+cols_to_transform <- c(3:35)
+
+dolphin[cols_to_transform] <- apply(dolphin[cols_to_transform], 2, log)
+
+write.csv(dolphin, "dolphin_log_transformed.csv", row.names = FALSE)
+
+
+
+
+```
+
+```{r}
+#PCA and PCoA tells how similar or dissimliar the samples are 
+#Non metric multidimensional Scaling (NMDS)
+#PCoA we use the cmdscale function
+
+#PCA 1 and PCA2 are independednt of each other
+#NMDS allows for diff axes to be correlated of each other
+#NMDS is not used for linear 
+
+#Stress value for NMDS 
+
+
+```
+
+
+
+
+
+
+
+```{r}
+veg <- read.txt("bryceveg.txt", header = TRUE)
+head(veg)
+
+
+barplot(pco.eu$eig[1:10], xlab = 'Coordinate axis #', ylab = "Eigen Value")
+
+
+```
+
+```{r}
+sites = read.table("brycesite.txt", header = TRUE, row.names = 1)
+ef = envfit(pco.bin, sites[,c('asp', 'elev', 'slope')])
+
+plot(pco.bin$points)
+plot(ef)
+#here we are bringing the three variables after we know that there's no use/point of them. After being no part of the PCA plot. 
+#It landed in those sites because of the species
+#DO Chunk Output in Console 
+
+
+ordisurf(pco.bin, sites$elev)
+
+ordisurf(pco.bin, sites$asp, col = "forestgreen") #aspect is showing the direction
+
+```
+
+

@@ -1,0 +1,206 @@
+---
+title: "BIOL606_hw_Lecture_05_Shah.rmd"
+output: html_document
+date: "2023-02-01"
+---
+
+```{r setup, include=FALSE}
+library(ggplot2)
+library(tidyverse)
+library(dplyr)
+```
+
+Use what we've done so far to go through the steps of answering the question:  Is total male flowers affected by number of leaves AND pollination treatment (in a single linear model)? 
+
+1.Form a hypothesis, being specific about it.
+```{r}
+flowercounts <- read.csv("lecture3_flowercounts.csv")
+cucumberdamage <-read.csv("lecture3_cucumberdamage.csv")
+
+str(flowercounts) #gives the structure of the dateset flowercount so I can see which variables are continuous and which are categorical
+str(cucumberdamage) #gives the structure of the dataset cucumberdamage
+
+df <- flowercounts %>%
+  group_by(plant) %>%
+  summarise(Fs = sum(F, na.rm = T), Ms = sum(M,na.rm = TRUE))
+#df<-df %>% mutate(M)
+#df<-select(df,-M,-F)
+df
+
+cucumberdamage
+combdamage<-left_join(cucumberdamage,df, by ='plant')
+combdamage
+
+flowercounts
+cucumberdamage
+combdamage
+
+#Hypothesis: The number of male flowers (cont. DV) is dependent on the number of leaves (cont. IV) (intercept) and the rate (slope) vary with hand pollination type (cat. IV)
+
+```
+
+2.Visualize the data in a plot.
+```{r}
+#recall which plots you use for which type of data
+#2 continuous datatype and 1 categorical type
+
+#graph<-ggplot(combdamage, aes(x = num_leaves ,y=M, color = "pollination")) + xlabel = "Number of leaves" + ylabel = "Number of male flowers" + scatter.smooth() + theme_light()
+
+graph<-ggplot(combdamage, aes(x = num_leaves ,y=Ms, xlabel = "Number of leaves", ylabel = "Number of male flowers", color = pollination)) +
+  geom_point(size=2)+ 
+  geom_smooth(method='lm', se = T, alpha = 0)+ 
+  theme_classic()
+
+graph
+
+
+
+```
+
+3.Build a model using lm().
+```{r}
+#Refer to the lecture 5 class slides for which one hypothesis you made
+#Go to chapter 6 and refer to 6.3.4 cont cont categorical (season)
+#mutate the data of flowercounts to cucumberdamage and make it a big giant dataset that consist everything 
+#rename the column names as per the rough hypothesis you've made
+
+#giant_big_dataset.mod <- lm(num_leaves ~ male_flowers * hand_pollination, data=giant_big_dataset)
+
+lm_model <- lm(Ms ~ num_leaves * pollination, data = combdamage)
+lm_model
+
+
+```
+
+4.Assess the model.
+```{r}
+
+plot(lm_model) #not the best model, but it's not bad too
+
+```
+
+5.Interpret the model, particularly in light of your hypothesis.
+```{r}
+anova(lm_model) 
+lm(formula = Ms ~ num_leaves, data = combdamage)
+
+#F-value indicates the variance 
+#as we can see, P-value for the number of leaves and pollination is 0.3801 which is greater than P > 0.05 and typically a p-value lesser than 0.05 is considered to be statistically significant so we will reject the hypothesis.
+
+##REJECTED Hypothesis: The number of male flowers (cont. DV) is dependent on the number of leaves (cont. IV) (intercept) and the rate (slope) vary with hand pollination type (cat. IV)
+```
+
+6.Plot your results the way you would want it to look in a journal (or on grandma's refrigerator)
+```{r}
+graph1<-ggplot(combdamage, aes(x = num_leaves ,y=Ms, xlabel = "Number of leaves", ylabel = "Number of male flowers", color = pollination)) + 
+  geom_point(size=2)+ 
+  geom_smooth(method='lm', se = T, alpha = 0)+ 
+  theme_classic()
+
+graph1 + ggtitle("Relation between number of leaves, number of male flowers and pollination type ")
+
+graph1
+
+
+```
+
+7.Include next class's readings (Beckerman ch. 7) as new chunk(s) and submit before start of next class. Also remember your peer review.
+```{r}
+#ggplot2 and dplyr is already loaded
+
+soay <- read.csv("SoaySheepFitness.csv")
+str(soay)
+glimpse(soay)
+
+ggplot(soay, aes(x = body.size, y = fitness)) +
+geom_point() +
+geom_smooth(method = "lm", se = FALSE) +
+geom_smooth(span = 1, colour = "red", se = FALSE) +
+xlab("Body mass (kg)") + ylab("Lifetime fitness")
+
+soay.glm <- glm(fitness ~ body.size, data = soay,
+family = poisson)
+
+soay.glm <- glm(fitness ~ body.size, data = soay,
+family = poisson(link = log))
+
+anova(soay.glm)
+
+anova(soay.glm, test = "Chisq")
+
+summary(soay.glm)
+
+# note our use of the $ to get the body.size column
+min.size <- min(soay$body.size)
+max.size <- max(soay$body.size)
+# make the new.x values; we use the 'body.size' variable
+# name to name the column
+# just as it is in the original data.
+new.x <- expand.grid(body.size =
+seq(min.size, max.size, length=1000))
+
+#generate fits and standard errors at new.x values.
+new.y = predict(soay.glm, newdata = new.x, se.fit = TRUE)
+new.y = data.frame(new.y)
+# check it!
+head(new.y)
+
+# housekeeping to bring new.x and new.y together
+addThese <- data.frame(new.x, new.y)
+addThese <- rename(addThese, fitness = fit)
+# check it!
+head(addThese)
+
+addThese <- mutate(addThese,
+lwr = fitness - 1.96 * se.fit,
+upr = fitness + 1.96 * se.fit)
+
+ggplot(soay, aes(x = body.size, y = fitness)) +
+# first show the raw data
+geom_point(size = 3, alpha = 0.5) +
+# now add the fits and CIs -- we don't need to specify body.size
+# and fitness as they are inherited from above
+geom_smooth(data = addThese, aes(ymin = lwr, ymax = upr), stat = 'identity' + theme_bw())
+# theme it
+# range of body sizes
+min.size <- min(soay$body.size)
+max.size <- max(soay$body.size)
+# make the new.x values;
+# we use the 'body.size' name to name the column
+# just as it is in the original data.
+new.x <- expand.grid(body.size =
+seq(min.size, max.size, length=1000))
+# generate fits and standard errors at new.x values.
+new.y = predict(soay.glm, newdata=new.x, se.fit=TRUE)
+new.y = data.frame(new.y)
+# check it!
+head(new.y)
+# housekeeping to bring new.x and new.y together
+addThese <- data.frame(new.x, new.y)
+# check it!
+head(addThese)
+# exponentiate the fitness and CI's to get back the
+# 'response' scale
+# note we don't need rename() because mutate() works with
+# the fit values each time, and we 'rename' inside mutate()
+addThese <- mutate(addThese,
+fitness = exp(fit),
+lwr = exp(fit - 1.96 * se.fit),
+upr = exp(fit + 1.96 * se.fit))
+# check it!
+head(addThese)
+#now the plot on the correct scale
+ggplot(soay, aes(x = body.size, y = fitness)) +
+# first show the raw data
+geom_point(size = 3, alpha = 0.5) +
+# now add the fits and CIs -- we don't need to specify
+# body.size and fitness as they are inherited from above
+geom_smooth(data = addThese,
+aes(ymin = lwr, ymax = upr), stat = 'identity') +
+# theme it
+theme_bw()
+
+summary(soay.glm)
+
+
+```

@@ -1,0 +1,58 @@
+---
+title: "Shah BIOL606 Lec02.rmd"
+output: html_document
+date: "2023-01-23"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+integer.data <- c(5,6,8,3,4,5,6,5,4,3)
+category.data <- factor(c("a","a","a","b","b","b","c","c","c","c"))
+random.data <- runif(10,0,1) #give me ten random numbers between zero to one
+
+integer.data #gives the exact data entered
+category.data #gives the exact data as well as Levels
+random.data #gives ten random numbers between zero and one #random generates random number everytime 
+
+random.data <- runif(10,0,5)
+random.data
+
+plot(integer.data)
+plot(category.data) #the bar height indicates the frequency #bar graph
+plot(random.data ~ integer.data) #first is the Y-axis and second is X-axis (~ is called the function of)
+plot(integer.data ~ category.data) #first is the Y-axis and second is X-axis #box plot #black line is the median, quartile number which one READ
+
+
+#ggplot2 entry
+
+gggraph <- ggplot(dataset_name)
+
+#facet_wrap would allow you to break variable into different categories.
+#facet_wrap(~var3)
+
+```
+
+
+```{r}
+library(ggplot2)
+arcticdata <- read.csv("NEE_snowmelt_Biol606.csv")
+
+gggraph <- ggplot(arcticdata, aes(x= SNOW_MELT_DATE_MODIS, y=CumC_uptake_Jun_Aug, color = SITE))
+gggraph +
+  geom_point(shape= 19, size = 3)+
+  geom_smooth(method = lm)
+
+```
+
+
+```{r}
+#graphs- what makes a good graph in a paper 
+
+#legible text
+#labels
+#greyscale
+#dashes
+#high resolution images making sure it's not blurry

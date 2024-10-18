@@ -1,0 +1,50 @@
+---
+title: "BIOL606_Lecture5_Shah.rmd"
+output: html_document
+date: "2023-02-01"
+---
+
+```{r setup, include=FALSE}
+library(ggplot2)
+library(tidyverse)
+library(dplyr)
+library(readr)
+```
+
+```{r}
+#snowmelt <- read.csv("NEE_snowmelt_Biol606", header = TRUE)
+cdata <- read.csv("lecture3_cucumberdamage.csv")
+flowercounts <- read.csv("lecture3_flowercounts.csv")
+cdata$plant <- as.factor(cdata$plant)
+
+flowercounts$plant <- as.factor(flowercounts$plant)
+
+flowertotals<- flowercounts %>% 
+  group_by(plant) %>% 
+  summarise(Fs = sum(F, na.rm = T), Ms= sum(M, na.rm = T))
+
+cfdata<- left_join(cdata, flowertotals, by = "plant")
+
+male_plot <- ggplot(cfdata, aes(x = num_leaves, y= Ms))+
+  geom_point()+
+  geom_smooth(method = 'lm', se=TRUE) #se=standard error, lm=linear model
+male_plot
+```
+
+
+
+```{r}
+#Doing stuff from the slides shared for lecture 5
+
+snowmelt <- read.csv("NEE_snowmelt_Biol606", header = TRUE)
+
+glimpse(snowmelt)
+
+
+
+
+
+
+
+```
+

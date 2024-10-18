@@ -1,0 +1,165 @@
+---
+title: "BIOL606_hw_10a_Shah"
+author: "Priyanshi Shah"
+date: "2023-03-20"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(ggplot2)
+library(dplyr)
+library(scatterplot3d)
+library(car)
+```
+
+```{r}
+gut_diversity <- read.csv("gut_diversity.csv", header = TRUE)
+
+gut_diversity
+
+#scaling doesn't apply to your response/ dependent variables.
+#scaling the independent variables 
+gut_diversity$age <- scale(gut_diversity$age)
+gut_diversity$weight <- scale(gut_diversity$weight)
+gut_diversity$exercise<- scale(gut_diversity$exercise)
+
+#testing with two IVS, but with no interactions, additive model
+mod1 <- lm(diversity ~ age + diversity, data = gut_diversity)
+
+#testing with two IVS but separately
+mod2a <- lm(diversity ~ age, data = gut_diversity)
+mod2b <- lm(diversity ~ exercise, data = gut_diversity)
+
+summary(mod1)
+summary(mod2a)
+summary(mod2b)
+
+#intercept + 0.0436(age) + 2.3987(exercise)
+
+```
+
+
+```{r}
+
+mod3 <- lm(diversity ~ weight, data = gut_diversity)
+summary(mod3)
+
+mod4 <- lm(diversity ~ exercise + weight, data = gut_diversity)
+summary(mod4)
+
+mod5 <- lm(weight ~ exercise, data = gut_diversity)
+summary(mod5)
+
+# making a plot of weight vs exercise 
+gut_plot <- ggplot(gut_diversity, aes(x = weight, y = exercise)) +
+  geom_point()
+  
+gut_plot
+
+```
+```{r}
+#Three way to determine multicollinearity
+
+#1.) make a plot
+#2.) cor function
+#3.) variance inflation factors/predictors/variables: vif(model)
+
+pairs(~age+exercise+weight, data = gut_diversity)
+
+#THIS IS SO COOL
+#FRIENDS, ARE YOU IMPRESSED?
+library(psych)
+pairs.panels(gut_diversity[ ,3:5])
+
+
+cor(gut_diversity[3:5])
+cor(gut_diversity[,c('weight', 'exercise', 'age')])
+```
+```{r}
+
+mod6 <- lm(diversity~ exercise + weight, data = gut_diversity)
+
+library(car)
+
+vif(mod6) # not below 1, not above 5 
+
+
+```
+#HOMEWORK 
+```{r}
+#interaction will be at the bottom 
+#y = intercept + slope(age) + slope(exercise) + slope(age*exercise)
+
+#for question 3 form it along the lines of...
+#as age increases, the diversity is increasing but with what level of exercise
+
+```
+
+1. Fit the gut OTU Shannon diversity model with an interaction (DV = diversity, IV = age, exercise,
+and their interaction).
+```{r}
+#fitting the model with the interaction between 2 IV's
+gut_model <- lm(diversity ~ age * exercise, data = gut_diversity)
+summary(gut_model)
+
+```
+
+
+
+2. Test the IVs. There is an interaction, so type III Anova() would probably be best so
+age*exercise doesn't give different results than exercise*age... But good news, if ALL your IVs are
+continuous, you don't have to worry about changing the contrasts statement.
+• type III Anova() and summary() give same p-values
+• anova() is still order-dependent unless perfectly balanced (very unlikely with
+continuous IVs)
+```{r}
+gut_model2 <- lm(diversity ~ age * exercise, data = gut_diversity)
+
+Anova(gut_model2,type=3) #because there is an interaction and the data is unbalanced.
+
+summary(gut_model2)
+
+```
+
+
+3. I know the interaction is not significant, but pretend that it is. How would you describe, in
+words (not numbers) the OTU diversity relationship with age and exercise? Include your
+description in the text of your Rmd file.
+
+```{r}
+
+#The estimates show the expected change in diversity for each on-unit increase in the predictor variable. The intercept represents the expected value of diversity when all the predictor variables are zero. 
+
+#We know that the interaction is not significant, but if it was we can say that for one-unit increase in the interaction between age and exercise, the diversity is reducing 0.5359.
+
+```
+
+
+4. It is hard to plot when you have >1 continuous IV. Try to come up with a way to do this.
+
+```{r}
+final_plot <- scatterplot3d(
+  gut_diversity[,2:4], pch = 21, color = "purple",
+  grid = TRUE, box = FALSE,
+  mar = c(3, 3, 0.5,3)
+)
+
+#pch does fill in color
+#liked predict3d as the library to use
+
+final_plot
+
+
+
+```
+
+
+
+
+
+
+
+
+
+
+

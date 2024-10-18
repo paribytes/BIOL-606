@@ -1,0 +1,49 @@
+---
+title: "Shah BIOL 606 Lec01"
+output: html_document
+date: "2023-01-18"
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+```
+
+
+```{r} 
+#problem1: Calculate mean and standard deviation of cumulative June-August C uptake ("CumC_uptake_Jun_Aug")
+
+arcticdata= read.csv("NEE_snowmelt_Biol606.csv", header=TRUE)
+
+mean(NEE_snowmelt_Biol606$CumC_uptake_Jun_Aug, na.rm = TRUE) #na.rm will remove the NA values in the dataset
+
+sd(NEE_snowmelt_Biol606$CumC_uptake_Jun_Aug, na.rm = TRUE)
+
+```
+```{r}
+#problem2: Calculate the length of the snow free period using the day the last snow melted (SNOW_MELT_ DATE_MODIS) and the day of the first fall snowfall (SNOW_FALL_START_MODIS)
+
+arcticdata= read.csv("NEE_snowmelt_Biol606.csv",header=TRUE)
+
+lengthOfSnow <- ("SNOW_MELT_DATE_MODIS" - "SNOW_FALL_START_MODIS")
+
+print(lengthOfSnow)
+
+
+
+
+
+```
+```{r}
+#problem3: log transform precipitation_Jun_Aug and create a dataframe that includes the non-log transformed and the log-transformed precipitation variables, and the length of the snow free period. Save it as a .csv file.
+
+my_vec <- 1:10
+my_vec
+
+log(my_vec)
+
+df <- dataframe ()
+
+
+
+
+

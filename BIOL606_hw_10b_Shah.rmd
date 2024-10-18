@@ -1,0 +1,205 @@
+---
+title: "BIOL606_hw_10b_Shah.rmd"
+author: "Priyanshi Shah"
+date: "2023-03-22"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(dplyr)
+library(car)
+library(ggfortify)
+library(MuMIn)
+```
+
+
+```{r}
+#parsimonious is simple yet powerful model. The one that is easiest to explain. 
+
+birdmass <- read.csv("offspring_mass.csv", header = TRUE)
+#View(birdmass) just checking out the data
+
+birdmass$plant = as.factor(birdmass$plant)
+
+
+bird_model <- lm(offspring_mass ~ dist_edge + feedings_per_day + canopy_cover + height + plant, data = birdmass)
+
+```
+
+```{r}
+vif(bird_model)
+
+pairs( ~ dist_edge + feedings_per_day + canopy_cover + 
+         height + plant, data = birdmass)
+
+#around 1 is fine. 3-5 range is something when we would be worried. 
+#Here, we can say that there's not any strong correlations
+
+plot(bird_model)
+autoplot(bird_model)
+
+summary(bird_model)
+
+#r squared values go from 0 to 1. 1 being the best
+
+#model averaging 
+```
+```{r}
+
+bird_model_glm <- glm(offspring_mass ~ dist_edge + feedings_per_day + canopy_cover + height + plant, data = birdmass)
+
+
+summary(bird_model_glm)
+
+#drumrolls for "drop1"
+drop1(bird_model_glm)
+
+```
+
+```{r}
+bird_model_glm2 <- glm (offspring_mass ~ dist_edge + feedings_per_day + canopy_cover + height + plant, data = birdmass, na.action = na.fail)
+
+allmodels <- dredge(bird_model_glm2)
+allmodels 
+
+```
+
+
+```{r}
+#actual model averaging
+
+allmodavg <- model.avg(allmodels) #"full model averaging"
+summary (allmodavg)
+
+
+summary(model.avg(allmodels, subset = delta < 5)) #"conditional model averaging"
+
+
+```
+
+
+#HOMEWORK HOMEWORK HOMEWORK HOMEWORK HOMEWORK HOMEWORK 
+```{r}
+#You can compare  the models that are not overlapping as well. If you want to choose models that are overlapping, you can do that as well. 
+
+#ALREADY MADE Hypothesis 1 FROM THE PPT : "Bird nests that are higher off the ground and closer to a forest edge will be exposed to increased sunlight, and the heat stress will reduce nestling bodymass."
+
+#distance to the forest edge
+#number of feedings per day
+#canopy cover
+#height of the nest from the ground
+#plant type 
+
+#MY HYPOTHESES
+
+#Hypothesis 1: "Bird nests that are higher off the ground and are on a plant will be exposed to increased sunlight, and thus the heat stress will reduce the nestling bodymass." 
+
+#Predictor variables: height, plant 
+#Response variable: offspring_mass 
+
+modA <- glm (offspring_mass ~ height + plant, data = birdmass, na.action = na.fail)
+
+summary(modA)
+
+#bird_modelA <- dredge(modA)
+#bird_modelA
+
+
+```
+
+
+```{r}
+#Hypothesis 2: "Nestlings that have more number of feedings per day and are covered by a wider canopy cover will be exposed to less sunlight, and thus the reduced heat stress will increase nestling bodymass."
+
+#Predictor variables: feedings per day, canopy cover 
+#Response variable: offspring_mass 
+
+modB <- glm (offspring_mass ~ feedings_per_day + canopy_cover, data = birdmass, na.action = na.fail)
+
+summary(modB)
+
+#bird_modelB <- dredge(modB)
+#bird_modelB
+```
+```{r}
+
+#Hypothesis 3: "Bird nests that are closer to the ground, have more number of feedings per day, and are farther from the forest edge will have increased nestling bodymass."
+
+#Predictor variables: height, feedings per day, distance to the forest edge
+#Response variable: offspring_mass 
+
+modC <- glm (offspring_mass ~ height + feedings_per_day + dist_edge, data = birdmass, na.action = na.fail)
+
+#bird_modelC <- dredge(modC)
+#bird_modelC
+
+summary(modC)
+
+```
+```{r}
+# Making the last model with only an intercept (~1) as the IV. 
+modD <- glm(offspring_mass ~ 1, data = birdmass, na.action = na.fail)
+
+summary(modD)
+
+```
+
+
+```{r}
+# Comparing the models:
+
+Cand.mods <- list(modA, modB, modC, modD)
+aictab <- model.sel(Cand.mods)
+aictab
+
+```
+
+
+```{r}
+# Draw conclusions from the model selection output.
+# Which of your hypotheses is/are best supported?
+
+#According to the model selection table, model 2 has the lowest AIC value of 508.7 which indicates that it is the best model among all the 4 models. Model 3 has a slightly higher AIC value of 509.4
+#The table also provides weight of evidence for each model (weight), which basically shows the probability that each model is the best model among the ones compared. So, in our case, model 2 has 0.584 of weight. 
+
+#Thus, we can accept our hypothesis for model 2 which was that nestlings that have more number of feedings per day and are covered by a wider canopy cover will be exposed to less sunlight, and thus the reduced heat stress will increase nestling bodymass which also makes biological sense.  
+
+```
+
+
+
+
+
+
+
+
+
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

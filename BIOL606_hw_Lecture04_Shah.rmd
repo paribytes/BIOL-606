@@ -1,0 +1,175 @@
+---
+title: "BIOL606_hw_Lecture04_Shah.rmd"
+output: html_document
+date: "2023-01-27"
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+library(data.table)
+```
+
+1. Import both data files, call them "cucumberdamage" and "flowercounts". Run this line of code after you've imported them:
+#flowercounts$plant <- as.factor(flowercounts$plant)
+
+```{r}
+cucumberdamage <- read.csv("lecture3_cucumberdamage.csv",header = TRUE) #reading the file 
+cucumberdamage #viewing the data
+
+flowercounts <- read.csv("lecture3_flowercounts.csv", header = TRUE)
+flowercounts
+
+flowercounts$plant <- as.factor(flowercounts$plant) #as.factor converts vector into factors and gives                                                            different levels (or categories) in the end
+flowercounts$plant
+
+cucumberdamage$herbivory <- as.factor(cucumberdamage$herbivory) #for trial
+cucumberdamage$herbivory        #gave 4 levels (H, L, M, O) which were the different inputs for herbivory
+
+```
+
+2. Determine the total number (sum) of male and female flowers combined on each plant (i.e., total number of flowers, males + females).
+```{r}
+df = data.frame(flowercounts$F,flowercounts$M )
+
+female_count = flowercounts$F
+male_count = flowercounts$M
+
+total_flower_count = male_count + female_count      #gives the count of total flowers on a single plant
+print(total_flower_count)
+
+#WHY DON'T THE BELOW CODES WORK 
+#print(with(flowercounts,sum(flowercounts$F,flowercounts$M)), na.rm = TRUE)
+#print(sum(flowercounts$F,flowercounts$M), na.rm = TRUE)
+
+#total_total = columnSums(cbind(flowercounts$F,flowercounts$M), na.rm = TRUE)
+#total_total
+
+#print(flowercounts$F + flowercounts$M)
+
+female_fl <- flowercounts %>% #it group rows by column values, here, I want all rows where F>0
+ group_by(F>0) %>% 
+  tally() #gives the total number
+
+female_fl
+
+male_fl <- flowercounts %>% #it group rows by column values, here, I want all rows where F>0
+ group_by(M>0) %>% 
+  tally()#gives the total number
+
+male_fl
+
+tot_flowers <- female_fl + male_fl #gives total number of flowers which is 8189
+tot_flowers
+
+#################
+
+flowercounts <- mutate(flowercounts, flowernum= M + F)
+View(flowercounts)
+flower_tot <- aggregate(flowercounts$flowernum, list(flowercounts$plant), FUN = sum)
+flower_tot
+
+```
+
+3. Join the total flower number count with the cucumberdamage dataframe (look at "Combine Tables" on the second page of the dplyr cheat sheet)
+```{r}
+cucumberdamage_sum <- mutate(cucumberdamage, flower_tot= flower_tot$x) #adds flower_tot column into cucumberdamage
+View(cucumberdamage_sum) #to check
+View(flower_tot) #to check 
+
+```
+
+4. Use a t-test to determine if the hand-pollination treatment affects flower number. In your annotation, explain how you interpret the result of the t-test (in your own words)
+```{r}
+View(cucumberdamage)
+cucumberdamage_sum$pollination <- as.factor(cucumberdamage_sum$pollination)
+
+#t.test(cucumberdamage_sum$flower_tot~ cucumberdamage_sum$pollination) # using a t-test
+t.test(flower_tot~pollination, cucumberdamage_sum)
+
+```
+
+5. Make a figure in ggplot depicting flower number and pollination treatment (make it look pretty given the tricks you learned last time).
+```{r}
+
+#box-plot 
+
+ggplot(cucumberdamage_sum, aes(x=flower_tot, y=pollination))+ geom_boxplot()+ geom_point(size= 3, colour = 'green', alpha = 0.5)+ xlab("Number of flowers produced")+ ylab("Types of Pollination")
+
+
+```
+
+6.On each plant, the lengths of 3 leaves were measured (leaf1length, leaf2length, leaf3length in the cucumberdamage dataframe). First, use dplyr to calculate mean leaf length of each plant. Then, test the hypothesis that hand-pollination decreases leaf size.
+```{r}
+mean_leaf_length <- (cucumberdamage$leaf1length + cucumberdamage$leaf2length + cucumberdamage$leaf3length)/3 #mean leaf length of each plant 
+mean_leaf_length
+
+# performing a t-test to find if the hand-pollination treatment affects length of leaves.
+t.test(mean_leaf_length~cucumberdamage_sum$pollination)
+
+```
+
+7. Make a ggplot illustrating the results of leaf length vs hand pollination.
+```{r}
+plot2 = ggplot(data = cucumberdamage, mapping = aes(x= mean_leaf_length, y=hand_pollination))+ geom_boxplot(outlier.colour="blue", outlier.shape=8, outlier.size=4)+ xlab("Types of Pollination")+ylab("Average leaf length")+ theme_classic()
+
+#plot2 Shows error
+
+```
+
+8. Be sure to include code and annotations for the next class's assigned readings in the file.
+```{r}
+#Chapter 5: Introducing stats into R
+
+lady <- read.csv("ladybirds_morph_colour.csv") #importing the data
+#View(lady)
+glimpse(lady) #looking at the data
+
+totals<- lady %>% 
+  group_by(Habitat, morph_colour) %>% 
+    summarise(total.number = sum(number))
+
+#stat = 'identity' is to tell plot to not calculate anything from the data
+#position = 'dodge' is to put two bars next to each other and not stack them
+
+ggplot(totals, aes(x= Habitat, y=total.number,
+                   fill= morph_colour))+ 
+  geom_bar(stat = 'identity',position = 'dodge')
+
+#choosing the colors of the morphs
+ggplot(totals, aes(x= Habitat, y=total.number,
+                   fill= morph_colour))+ 
+  geom_bar(stat = 'identity',position = 'dodge')+
+  scale_fill_manual(values= c(black= "black", red = "red"))
+
+totals
+
+lady.mat <- xtabs(number ~ Habitat + morph_colour,
+                  data = lady)
+
+lady.mat
+
+#chisquare test
+chisq.test(lady.mat)
+
+lady.chi <- chisq.test(lady.mat)
+names(lady.chi)
+
+lady.chi$expected
+
+#two-sample test
+
+ozone <- read.csv("ozone.csv")
+glimpse(ozone)
+
+ggplot(ozone, aes(x= Ozone))+
+  geom_histogram(binwidth = 10)+
+  facet_wrap(~ Garden.location, ncol = 1)+
+  theme_bw()
+
+t.test(Ozone ~ Garden.location, data= ozone)
+
+var.test(Ozone ~ Garden.location, data = ozone)
+
+```

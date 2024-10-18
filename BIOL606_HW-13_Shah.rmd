@@ -1,0 +1,121 @@
+---
+title: "BIOL606_HW_13_Shah.rmd"
+author: "Priyanshi Shah"
+date: "2023-04-10"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(psych)
+library(ggplot2)
+library(ggfortify)
+```
+
+#CLASS NOTES CLASS NOTES 
+```{r}
+usair <- read.csv("USairpollution.csv", header = TRUE)
+
+head(usair)
+
+#Psych package has pairs.panels() function that can be used 
+
+usair_pca <- prcomp(usair[,c(-1,-8,-9)], center=TRUE, scale.= TRUE) #leave out 1, 8 and 9 
+
+# df[rows, columns]
+# df[,c(-1,-8,-9)] leave out columns 1, 8, and 9 which automatically means that you keep 2,3,4,5,6,7 columns 
+
+summary(usair_pca) # the first 3 principal componenets explain 85% of the total variance 
+
+screeplot(usair_pca) #ordered from the most component explaining the most correlation, and then go on 
+#how do you leave out the components changes from person to person 
+
+usair_pca # gives loading values for each of the original variables , values range from -1 to +1 
+```
+
+
+```{r}
+#biplot: made in ggfortify 
+#the lengths of the arrow demonstrates the loading 
+#the angles between the arrows will tell you how correlated they are 
+#small angles = higher correlation 
+#cos2 indicates the quality of that variable's representation in the data 
+
+#PCA: among all the explanatory variables, if we were to boil it down which ones are the best
+
+#biplot(usair_pca, cex = c(1,1,3), xlab = "PC1", ylab = "PC2", cex.axis = 1.5, cex.lab = 1.8 , var.axes = FALSE, ylabs =  )
+#this is an incomplete code 
+```
+
+
+#IN-CLASS EXAMPLE 2
+```{r}
+pg <- read.table("pgfull.txt", header = TRUE)
+head(pg)
+pg$plot = factor(pg$plot)
+
+
+
+pgd = pg[,1:54]
+
+pgmodel = prcomp(pgd, scale=TRUE)
+summary(pgmodel)
+
+screeplot(pgmodel)
+```
+
+#HOMEWORK HOMEWORK HOMEWORK HOMEWORK 
+
+#Write code to load the sparrow data
+```{r}
+sparrow <- read.table("bumpus.dat.txt", header = TRUE) #loading the data
+head(sparrow) #just checking out the data
+
+#View(sparrow)
+```
+
+#Treat column 1 (‘survive’ 0 or 1) as the response, don’t include it in the PCA
+```{r}
+# df[rows, columns]
+# df[,c(-1,-8,-9)] leave out columns 1, 8, and 9 which automatically means that you keep 2,3,4,5,6,7 columns 
+
+up_sparrow <- sparrow[,c(-1)]
+head(up_sparrow) #awesome, it worked. I have successfully removed the first column from my original dataframe called sparrow and now will be using up_sparrow for the PCA 
+
+```
+
+
+#Produce a pairs plot of the various bird traits
+```{r}
+
+pairs.panels(sparrow[ ,2:10]) #using the Psych package 
+
+pairs(sparrow[ ,c(-1)], lower.panel = NULL) #and doing without the Psych package 
+```
+
+#Fit a PCA, using centered and scaled trait data. Show the summary output for the PCA
+```{r}
+
+up_sparrow_pca <- prcomp(up_sparrow[,c(-1)], center=TRUE, scale.= TRUE)
+up_sparrow_pca
+
+```
+
+
+#Produce a scree plot
+```{r}
+
+screeplot(up_sparrow_pca)
+
+```
+
+
+#Produce a biplot using the ggfortify package autoplot() function, showing the birds colored by survival, and arrows showing the variables in the PCA.
+
+```{r}
+
+autoplot(up_sparrow_pca, data = sparrow, colour = 'survive', loadings=TRUE,
+size = 3, loadings.label = TRUE, loadings.label.size=5, label=TRUE, label.vjust = -0.4)
+
+```
+

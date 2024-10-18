@@ -1,0 +1,153 @@
+---
+title: "BIOL606_Hw12_Shah.rmd"
+author: "Priyanshi Shah"
+date: "2023-04-03"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(boot)
+```
+
+
+```{r}
+ragweed <- read.csv("Ragweed.csv", header = TRUE)
+
+#step 1: specify a test statistic 
+#two site types: roadcut and protected 
+
+#1.) Roadcut - Protected = 0
+# do it as the absolute value
+#|Roadcut - Protected| = 0 (null hypo)
+#|Roadcut - Protected| > 0 (alternative hypo, non-zero value)
+
+#step 2: Generate a null distribution 
+
+#these are the diff we might expect between Roadcut and Protected if only random chance were operating
+#recall that due to sampling error, we don't expect that the roadcut vs protected biomass would always be equal, but they will be close.
+# if there's no diff between roadcut and protected, then we can say that the site type don't matter.
+#green values in the right are randomly assigned values. Not making up the values, they are just reused-reassigned.
+
+#step 3: Permutation analysis
+#You ask the computer to do this permutation analysis for you for however times you want. 
+
+```
+
+
+```{r}
+ragmean = aggregate(Biomass~Site, data = ragweed, FUN = mean)
+ragmean
+
+#ragmean = ragweed %>% group_by(Site) %>% 
+#summarise (Biomass = mean(Biomass))
+
+ragdiff = abs(ragmean$Biomass[1] -
+  ragmean$Biomass[2])
+
+
+ragdiff 
+
+```
+```{r}
+absdiff = vector(mode = "numeric", length = 10000) #Empty at this point, is holding NAs
+#Put the original observed difference in 1st slot
+absdiff[1] = ragdiff 
+
+```
+
+
+```{r}
+#Randomization begins 
+for (i in 2:10000){
+  temp = ragweed
+  temp$Biomass = sample(ragweed$Biomass, size = nrow(ragweed), replace = FALSE)
+  temp2mean = aggregate(Biomass~Site, data = temp, FUN = mean)
+  dif = abs(temp2mean$Biomass[1] - temp2mean$Biomass[2])
+  absdiff[i] = dif
+}
+
+```
+
+```{r}
+
+mean(absdiffs)
+
+par(mar = c(5, 6, 1, 1))
+hist(absdiffs, main = '', col= 'skyblue')
+
+
+```
+
+```{r}
+absdiffs = absdiffs[order(absdiffs)]
+
+indx = floor(length(absdiffs) * 0.95)
+
+absdiffs[indx]
+
+equalgreater = length(which(absdiffs >= ragdiff))
+
+pvalue = equalgreater/length(absdiffs)
+pvalue 
+
+```
+
+
+
+
+
+```{r}
+#null distribution ma positive and negative banne allow karie to two-tailed test
+#one-tailed test tyaare j jyaare I am choosing 
+
+#The bootstrap:
+sample1 = sample(chimp$assymetrySCore, size = nrow(chimp), replace = TRUE) #replace True no meaning samji ne?
+
+```
+
+#BOOT FUNCTION 
+```{r}
+
+myfun = function(x, i){
+  #generate a sample d from the input data x. The value i is a set of indices in the input data x.
+  d = x[i]
+  mymedian = median(d)
+  myvar = var(d)
+  return(c(mymedian, myvar))
+}
+
+
+myboot = boot(data = chimps$asymmetryScore, statistic = myfun, R = 9999)
+myboot
+
+
+mybootci = boot.ci(myboot, conf = 0.95)
+mybootci
+
+```
+
+```{r}
+#Percentile interval: kinda like in the powerpoint where you order the data
+#Bias corrected and accelerated BCa interval: trying to account for the fact that the data is skewed. Widely used if the data is highly skewed
+
+
+#snail data- x-axis is their mass(bodyweight)
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+

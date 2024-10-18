@@ -1,0 +1,56 @@
+---
+title: "BIOL606_Lecture4_Shah.rmd"
+output: html_document
+date: "2023-01-30"
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+```
+
+```{r}
+#pipe ctrl shift M
+#t-test: correlating between two variables, see ppt for more info
+#more than two categories/variables, the test would be called ANOVA
+#chi-squared test: both categories categorical variables 
+#ligistic regression: Continuous independent variable and categorical dependent variable
+#encova 
+#t - difference between the means/variation in the measurements
+
+#num_leaves + pollination => additive model
+#num_leaves * pollination => interactive model
+
+#either models are fine but they will depend on which hypothesis we used 
+
+#to fix the linear model, you take a log 
+#then you add +1 so in case if you have a zero in the data, it doesn't give you no results...
+#model <- lm(log(turtlecounts + 1)) ~ depth, data = turtledata
+
+# glm uses maximum likelihood estimation method 
+
+#directionality is given to us by the summary
+
+#week 6 slide 14, body size = 0.54 is the slope
+
+
+
+
+
+
+
+
+```
+
+
+```{r}
+
+
+
+
+
+
+
+
+```
+
+

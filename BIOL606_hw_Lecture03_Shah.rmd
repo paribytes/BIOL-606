@@ -1,0 +1,95 @@
+---
+title: "BIOL606_hw_Lecture03_Shah"
+output: html_document
+date: "2023-01-29"
+---
+
+```{r setup, include=FALSE}
+rm(list = ls()) #cleaning R's brain yay
+library(tidyverse)
+library(dplyr)
+#library(dplyr, warn.conflicts = FALSE)
+library(ggplot2)
+library(broom)
+```
+
+Codes from Beckerman chapter 3 on "data wrangling"
+```{r}
+comp <- read.csv("compensation.csv", header = TRUE)
+
+View(comp)  #to view the data 
+names(comp) #diff column names
+#head(comp)
+dim(comp) #gives dimension of a matrix (num of rows& columns)
+str(comp) #gives structure (contents) of a data set
+#tbl_df(comp)
+glimpse(comp) #gives glimpse of the data 
+
+summary(comp) #gives summary stats for all the comp variables
+
+#five "verbs" which are also functions in dplyr
+#ALL dplyr functions do one thing, and one thing very fast and very effectively
+
+select(comp, Fruit)   #for selecting (read: grabbing) columns
+select(comp, -Root) #for selecting columns except for one...
+
+slice(comp, 2)     #for selecting rows
+slice(comp, 1:13)#continuous range of columns can be selected
+slice(comp, c(2, 4, 13)) #discontinuous set of columns
+
+with(comp, Fruit > 80)
+filter(comp, Fruit > 80) #finds the row where Fruit > 80 is true and returns them as a dataframe
+
+filter(comp, Fruit> 80 | Fruit< 23)
+
+lo_hi_fruit <- filter(comp, Fruit > 80| Fruit < 23)
+lo_hi_fruit
+
+arrange(comp, Fruit)
+comp <- mutate(comp, logFruit = log(Fruit))
+
+select(filter(comp, Fruit > 80), Root) #Root values from Fruit > 80 subset
+
+comp %>%       #piping
+  filter(Fruit > 80) %>%
+   select(Root)
+
+#putting summarise in the 1st position
+summarise(
+  group_by(comp, Grazing),
+        meanFruit = mean(Fruit)) #nested approach
+
+#gives mean of every grazing treatment and all the means are assigned to "mean.fruit" 
+mean.fruit <- summarise(
+  group_by(comp, Grazing),
+        meanFruit = mean(Fruit))
+
+#putting summarise in 3rd position
+comp %>%
+  group_by(Grazing) %>%
+    summarise(meanFruit = mean(Fruit))
+
+comp %>%
+  group_by(Grazing) %>%
+    summarise(
+      meanFruit = mean(Fruit),
+      sdFruit = sd(Fruit))
+
+#subtracts the mean fruit prod for each grazing treatment from the values for the corresponding grazing treatment     
+comp_mean_centered <- comp %>%
+  group_by(Grazing) %>%
+     mutate(Fruit_minus_mean = Fruit - mean(Fruit))
+  
+comp_lms <- comp %>%
+  group_by(Grazing) %>%
+    do(tidy(lm(Fruit ~ Root, data =.)))
+head(comp)
+
+filter(comp)    #for selecting subsets of rows
+arrange(comp)   #for sorting rows
+mutate(comp)    #for creating new variables in the dataframe
+
+#first argument to all dplyr functions is the data frame
+
+```
+

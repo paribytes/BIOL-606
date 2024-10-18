@@ -1,0 +1,175 @@
+---
+title: "BIOL606_Midterm2_Pradhan&Shah"
+author: "Priyanshi Shah"
+date: "2023-03-08"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(ggplot2)
+library(dplyr)
+library(tidyverse)
+library(ggfortify)
+library(AICcmodavg)
+library(car)
+library(nlme)
+
+```
+
+##Load and inspect genus data
+
+The data come from 17 different sites (13 restored prairies + 2 remnant prairie sites + 2 agricultural sites). 
+Soil samples were collected over six years (from 2013- 2018) for Fall, Spring, and Summer seasons.
+We will be looking at the genus richness of different bacterial species across these 17 sites. 
+
+Genus richness is often used as a measure of biodiversity or species richness in a given area. The more genera that are present, the greater the diversity of species is likely to be.
+
+For example, in a study of soil bacterial communities, genus richness would refer to the number of different bacterial genera present in the soil sample. This measure could be used to compare the diversity of bacterial communities in different types of soil or under different environmental conditions.
+
+
+#Importing the dataset called "nachusa_genus_data.csv"
+```{r}
+genus_data <- read.csv("nachusa_genus_data.csv", header = TRUE)
+#View(genus_data)
+head(genus_data) #checking out the data
+str(genus_data) #just to see how things are structured
+
+```
+
+#Reshaping the data
+```{r}
+#From this huge dataset, we will only be looking at the variables: site, site type, genus richness, season and year. 
+
+df = subset(genus_data, select = c(season, site, site.type, genusrichness, year))
+df
+
+#To further narrow it down, out of all the seasons (fall, spring and summer), we will only be focusing at fall season. 
+#So, here we are updating the old dataframe with filter function to filter out all other seasons except fall. This will decrease total observations from 248 to 101. 
+
+df_up <- df %>% filter(season %in% c("fall"))
+df_up
+
+#added a new column called "sample_id"
+
+df_up <- tibble::rowid_to_column(df_up,"sample_id") 
+df_up #updated dataframe
+
+```
+
+
+#Plotting the data
+```{r}
+#some initial plots to look at the data
+
+genus_site <- ggplot(df_up, aes(x = year, y = genusrichness, color = site)) +
+  geom_boxplot() +
+  labs(x = element_text("Year"), 
+       y = element_text("Genus richness")) +
+  ggtitle("Genus richness by year and sites") +
+  theme(axis.title = element_text(size = 18, face = "bold"),
+        axis.text.x = element_text(size = 14, face = "bold"),
+        axis.text.y = element_text(size = 14, face = "bold"))
+
+genus_site 
+
+#genusrichness is varying with every site throughout the years 
+
+
+genus_type <- ggplot(df_up, aes(x = year, y = genusrichness, color = site.type)) + 
+  geom_point() + 
+  geom_smooth(method="lm") +
+  labs(x = "Year", y = "Genus richness") +
+  ggtitle("Genus richness by year and site type")+
+  theme(axis.title = element_text(size = 18, face = "bold"),
+        axis.text.x = element_text(size = 14, face = "bold"),
+        axis.text.y = element_text(size = 14, face = "bold"))
+
+genus_type 
+
+```
+
+#Analysis
+```{r}
+#this is a classic example of repeated measures
+#Our response/dependent variable is genusrichness
+#site type is a categorical independent variable
+#Year is a fixed time factor
+#Site is what is being measured multiple times (the experimental replicate)
+
+#in model, time component is a fixed factor, but the thing replicate measured at multiple time points is the random factor:
+
+genus_model <- lme(genusrichness ~ site.type + year, random = ~1|site, data = df_up)
+
+plot(genus_model)
+
+qqnorm(resid(genus_model,type="normalized"))
+qqline(resid(genus_model, type="normalized"))
+
+#The QQ plot shows the residuals falling along a straight line. just a couple datapoints out of ~100  that stand out. Here, we are not worrying about those. 
+
+hist(resid(genus_model)) 
+#The histogram generated is showing a roughly symmetrical distribution with a bell-shaped curve which is a good sign.
+
+#but need to switch to method="ML" before evaluating fixed factors because the default REML method only estimates the random effects and removes the influence of the fixed effects on the estimation of variance components.
+
+genus_model <- lme(genusrichness ~ site.type + year, random = ~1|site, data = df_up, method = "ML")
+
+#we would've used F-test if the design was balanced, but since it's unbalanced (different sample sizes among site types in different years: 11 agriculture sites, 78 restoration sites, and 12 remnant sites) we used maximum likelihood "ML".
+
+```
+
+
+
+```{r}
+
+#When there is only one independent variable in the model, a Type III ANOVA is not possible since there is no variance to partition across independent variables. In this case, since our data is unbalanced and has no interactions, we will be using type II ANOVA test. 
+
+Anova(genus_model,type=2) 
+#Here, the response variable is genus richness. The result table shows that the effect of site.type on genusrichness is not significant, as the chi-squared test statistic is 0.9803 with 2 degrees of freedom and a p-value of 0.6125. This suggests that the type of site (agriculture, restoration or remnant) does not have a significant impact on the genusrichness.
+
+#On the other hand, the effect of year on genusrichness is highly significant, as the chi-squared test statistic is 49.2233 with 1 degree of freedom and a very small p-value of 2.284e-12 (which is less than 0.001). This suggests that the year has a significant impact on genusrichness.
+
+summary(genus_model)
+#First, the significant time effect is positive. So, genus richness has overall increased across the experiment. 
+#In this case, the model includes a random intercept for the site variable.
+
+#The "Fixed effects" section provides the estimates, standard errors, degrees of freedom, t-values, and p-values for each of the fixed effects in the model. The output shows that site.type did not have a significant effect on genusrichness, as both site.typeremnant and site.typerestoration have non-significant p-values. However, the year variable had a significant effect on genusrichness (p-value < 0.05).
+
+#The correlation table shows the correlation coefficients between the predictors. Here, the correlation between site.typeremnant and site.typerestoration is -0.042, while the correlation between year and site.typeremnant is -0.034.
+
+#The "Standardized Within-Group Residuals" section provides information about the distribution of the residuals in the model. The "Number of Observations" section shows the number of observations used in the analysis, and the "Number of Groups" section shows the number of levels in the site variable.
+
+#FOR THE SUMMARY_TABLE:
+#The second row shows the estimated regression coefficient for site.typeremnant. A negative value of -24.52 indicates that the average response variable decreases by 24.52 units when site.typeremnant increases by one unit. 
+
+#The third row shows the estimated regression coefficient for site.typerestoration. A positive value of 2.05 indicates that the average response variable increases by 2.05 units when site.typerestoration increases by one unit. 
+
+#The fourth row shows the estimated regression coefficient for year. A positive value of 35.91 indicates that the average response variable increases by 35.91 units when year increases by one unit. The p-value associated with the predictor is very low, indicating that there is strong evidence to conclude that year has a significant effect on the response variable.
+
+```
+#Final plot
+```{r}
+#Plotting the final graph: 
+
+
+graph = ggplot(df_up, aes(x = year,y = genusrichness, color = site)) 
+
+
+final_graph = graph +
+  geom_point(size = 3)+
+  labs(x= "Year (2013- 2018)",y ="Genus richness", title = "Genus richness over the years for 17 sites")+
+  facet_grid(~factor(site, levels = c("AG","CCE","CCW","FC","HF","HL","HN","HW","L","MR","MV","SB","SF","SOY","TC","TCR","WH")), scales = "free_x")+ # levels changes order of facet, changed for better readability of x-axis, scales free_x means that the x-axis will adjust independently for each facet
+  scale_color_manual(values = c("green3","darkred","black","gold","navy","deeppink3","bisque4", "aquamarine4", "chocolate1", "darkgoldenrod2", "darkkhaki", "darkorchid", "dodgerblue", "green1", "lightpink1", "midnightblue", "lightslateblue"))+
+  theme_bw()+
+  theme(legend.position = "none",
+        strip.text = element_text(size = 10,face = "bold"), #size change and boldface for title of facets
+        plot.title = element_text(size = 20), # size of title text
+        axis.title = element_text(size = 12, face = "bold"),# size of axis text with boldface letters
+        axis.text.x = element_text(size =5, angle = 45, vjust = 0, hjust = 0.2), # text size, changes angle of text, vjust: vertical adjustment of text , hjust: horizontal adjustment to text, best we could get for readability
+        axis.text.y = element_text(size = 12)) #changes size of y-axis tick text
+
+final_graph # OPEN IT ON THE FULL SCREEN TO SEE TO SEE ALL THE YEARS. 
+```
+
+
+

@@ -1,0 +1,143 @@
+---
+title: "BIOL606_Priyanshi_27thFeb"
+author: "Priyanshi Shah"
+date: "2023-02-27"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(ggplot2)
+library(dplyr)
+library(nlme)
+library(car)
+```
+
+
+```{r}
+#assumptions of general linear model: homoscedascity of residuals, normality of residuals, leverage- outliers, independent data points (genetic relatedness) randomization will help in this case 
+#organisms that grow in the same environment, are near to each other
+
+#scaling is the common thing to do when dealing with categorical predictor
+
+#why aren't p-value in lmer models?
+#lmer people, group of statisticians don't know what those mean here, so they're not going to give you. 
+#it's anyway arbitrary value
+#Rather they want you to look at the intercept 
+
+#look at how people are presenting mixed models in the papers
+#random factors can only be categorical
+
+#plot the residuals before using the "summary"
+
+#diagnostic plot is just autoplot
+```
+
+```{r}
+#Slide 11
+#3 box plots
+
+plantdata <- read.csv("blocked_experiment.csv", header = TRUE)
+View(plantdata)
+#model <- lm(cat_mass ~ damage * AMF)
+
+```
+
+```{r}
+
+blockmodel <- lme(cat_mass ~ AMF * damage, random = ~1|block, data = plantdata, method = "ML")
+
+#check the residuals of the model
+plot(blockmodel) #check for homoscedasticity
+
+qqnorm(resid(blockmodel)) #check for normality of residuals 
+
+hist(resid(blockmodel)) #what is this doing?
+
+```
+```{r}
+#Evaluate the fixed factors in some way:
+options(contrasts = c("contr.sum","contr.poly")) #refitting the blockmodel
+blockmodel <- lme(cat_mass ~ AMF * damage, random = ~1|block, data = plantdata, method = "ML")
+
+Anova(blockmodel, type = 3) #type 3 Anova test
+options(contrasts = c("contr."))
+
+```
+
+#HOMEWORK 
+
+#Site is a blocking factor
+#LimpetTreat is a categorical predictor, type of limpet grazing on plates
+# Fo is the response variable, amount of microalgae on plates
+# TempC is a continuous covariate, average temperature of plates
+
+#1. Import data and make exploratory data plots
+```{r}
+limpet <- read.csv("Limpet_grazing.csv", header = TRUE)
+#View(limpet) #Checking out the data!!!
+
+#boxplot(limpet$TempC, col = "pink")
+
+hist(limpet$TempC, col = "blue", breaks = 5)
+limpet$Site = as.factor(limpet$Site)
+plot (limpet)
+```
+
+#2. Fit a linear model with LimpetTreat and temC interaction, accounting for blocking by Site
+```{r}
+
+blockmodel <- lme(Fo ~ TempC * LimpetTreat, random = ~1|Site, data=limpet, method = "ML")
+
+plot(blockmodel)
+
+ 
+```
+
+#3. Produce diagnostic plots to check for homoscedasticity and normality of the residuals
+```{r}
+
+qqnorm(resid(blockmodel))
+hist(resid(blockmodel))
+```
+
+#4. Write a results statement based on your model output, reporting relevant significant terms.
+```{r}
+#The QQ plot doesn't show the residuals falling along a straight line (the plot is deviating from a straight line, doesn't look good at both the extremes) which can affect the accuracy of the model.
+
+#The histogram generated is also left skewed (i.e isn't showing a roughly symmetrical distribution with a bell-shaped curve which again is not a good sign).
+
+```
+
+```{r}
+
+#If we are trying to do the log transformation: 
+
+#if log-transform response, need to deal with 0's.  
+genus_model2<- lme(log(genusrichness+1) ~ site.type + year, random = ~1 | site, data = df_up)
+plot(genus_model2)
+qqnorm(resid(genus_model2, type="normalized"))
+
+#go back and use ML
+genus_model2 <- lme(log(genusrichness+1) ~ site.type + year, random = ~1 | site, data = df_up, method="ML")
+
+genus_model2
+
+anova(genus_model2)
+
+options(contrasts = c("contr.sum","contr.poly")) #change contrasts and refit mod1
+genus_model2 <- lme(log(genusrichness+1) ~ site.type + year, random = ~1 | site, data = df_up, method="ML")
+Anova(genus_model2,type=3)
+summary(genus_model2)
+```
+
+
+
+
+
+
+
+
+
+```
+
+

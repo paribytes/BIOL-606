@@ -1,0 +1,146 @@
+---
+title: "BIOL606_hw_Lecture06b_Shah.rmd"
+output: html_document
+date: "2023-02-08"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(dplyr)
+library(ggfortify)
+```
+#Lecture
+```{r}
+cdata <- read.csv("lecture5_cucumberdamage.csv")
+cdata
+str(cdata) #gives the structure of the dataset
+glimpse(cdata) #gives a more thorough structure
+
+#Hypothesis: The total number of fruits produced is dependent on the herbivore damage to the leaves (i.e., "leafdamage") and hand pollination treatments
+
+lm_model1 <- lm (totalfruits ~ leafdamage * pollination, data = cdata) #interactive model 
+lm_model1
+
+autoplot(lm_model1)
+
+poisson_model <- glm(totalfruits ~ leafdamage * pollination, data = cdata, family = poisson) #look at the residual deviance, which is why we would use quasipoisson plots
+poisson_model
+
+anova(poisson_model)
+anova(poisson_model, test = "Chi")
+
+summary(poisson_model)
+
+q_model <- glm(totalfruits ~ leafdamage * pollination, data = cdata, family = quasipoisson)
+q_model
+
+anova(q_model, test = "F")
+
+q_model2 <- glm(totalfruits ~ pollination * leafdamage, data = cdata, family = quasipoisson) #changing the order of the variables. The order in which you enter the variables really matter. 
+q_model2
+
+anova(q_model2, test = "F")
+
+
+#balanced design is when each category has same amounts, 
+#unbalanced is when you don't have a lot of data. This is very common. The way you had barely any data for reptiles, amphibians!
+
+```
+#HOMEWORK
+
+1. Import lecture5_NEWcucumberdamage.csv – NOTE THIS IS A NEW, UPDATED FILE.
+
+```{r}
+last_cucu <- read.csv("lecture5_NEWcucumberdamage.csv") #imported cucumber data FOR THE LAST TIME
+glimpse(last_cucu) #looking at the data
+```
+
+2. If you're going to analyze totalfruits again, is this dataset balanced with regards to pollination & herbivory? What about pollination & leaf damage? 
+3. Pick one of these pairs of IVs (pollination & herbivory, or pollination & leaf damage). Determine if these variables affect totalfruits, including an interaction, and going through the same steps you did last time to fit the model.
+
+```{r}
+#if the dataset was balanced, changing the order of variables won't change the final results, so let's see. 
+#thank you Devon for this idea
+checking1 <- glm(totalfruits ~ herbivory * pollination, data = last_cucu, family = quasipoisson)
+checking1
+
+checking2 <- glm(totalfruits ~ pollination * herbivory, data = last_cucu, family = quasipoisson)
+checking2
+
+anova(checking1) #type 1 (lowercase a) 
+anova(checking2)
+
+#the results of both these anova tests vary, which is an indication of an unbalanced dataset with regards to pollination and herbivory
+
+checking3 <- glm(totalfruits ~ leafdamage * pollination, data = last_cucu, family = quasipoisson)
+checking3
+
+checking4 <- glm(totalfruits ~ pollination * leafdamage, data = last_cucu, family = quasipoisson)
+checking4
+
+anova(checking3) #type 1 (lowercase a) 
+anova(checking4)
+
+#the results of both these anova tests vary, which is an indication of an unbalanced dataset with regards to pollination and leafdamage
+```
+
+4. Test the variables in your model using both type 1 and type 3 approaches. Do the results change? Do the conclusions change?
+
+```{r}
+#TYPE 1 APPROACH for herbivory and pollination
+
+checking1 <- glm(totalfruits ~ herbivory * pollination, data = last_cucu, family = quasipoisson)
+checking1
+
+checking2 <- glm(totalfruits ~ pollination * herbivory, data = last_cucu, family = quasipoisson)
+checking2
+
+anova(checking1, test = "Chisq")
+anova(checking2, test = "Chisq")
+
+#TYPE 1 APPROACH for leafdamage and pollination
+
+checking3 <- glm(totalfruits ~ leafdamage * pollination, data = last_cucu, family = quasipoisson)
+checking3
+
+checking4 <- glm(totalfruits ~ pollination * leafdamage, data = last_cucu, family = quasipoisson)
+checking4
+
+anova(checking3, test = "Chisq") #type 1 (lowercase a) 
+anova(checking4, test = "Chisq")
+
+
+#TYPE 3 APPROACH for herbivory and pollination
+
+checking1 <- glm(totalfruits ~ herbivory * pollination, data = last_cucu, family = quasipoisson)
+checking1
+
+checking2 <- glm(totalfruits ~ pollination * herbivory, data = last_cucu, family = quasipoisson)
+checking2
+
+library("car")
+options(contrasts =c("contr.sum","contr.poly"))
+checking1 <- glm(totalfruits ~ herbivory * pollination, data = last_cucu, family = quasipoisson)
+checking2 <- glm(totalfruits ~ pollination * herbivory, data = last_cucu, family = quasipoisson)
+Anova(checking1, type=3) #type 1 (lowercase a) 
+Anova(checking2, type=3)
+
+options(contrasts =c("contr.treatment","contr.poly"))
+
+
+#TYPE 3 APPROACH for leafdamage and pollination
+
+library("car")
+options(contrasts =c("contr.sum","contr.poly"))
+checking3 <- glm(totalfruits ~ herbivory * pollination, data = last_cucu, family = quasipoisson)
+checking4 <- glm(totalfruits ~ pollination * herbivory, data = last_cucu, family = quasipoisson)
+Anova(checking3, type=3) 
+Anova(checking4, type=3)
+
+options(contrasts =c("contr.treatment","contr.poly"))
+
+#In comparison with the type I results, the significance values have changed. Using Type-1, the significance of deviation for herbivory was 2.274e-08, whereas using Type-3 it was different.  
+
+```
+

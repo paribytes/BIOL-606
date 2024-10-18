@@ -1,0 +1,252 @@
+---
+title: "BIOL606_Priyanshi_22ndFeb"
+author: "Priyanshi Shah"
+date: "2023-02-22"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(AICcmodavg)
+library(ggplot2)
+library(dplyr)
+library(tidyverse)
+library(multcomp)
+```
+
+#CLASS 
+```{r}
+boar <- read.table("Boar.txt", header = TRUE)
+#boar <- as.factor()
+head(boar)
+plot(Tb ~ LengthCT, data = boar)
+
+
+#glm(Tb ~ bodylength)
+
+boarplot <- ggplot(boar, aes(x= LengthCT, y= Tb))+
+  geom_point()+
+  stat_smooth(method="glm", method.args =list(family = "binomial"), level = 0)+
+  xlab("Head-body length (cm)")+
+  ylab("Tb infection")+
+  theme_bw()
+
+boarplot
+
+summary(boarplot)
+  
+#ggplot doesn't understand NA as "not applicable values" and takes it as a categorical values. 
+
+```
+
+```{r}
+#Tb vs Age Class category 
+
+plot( Tb ~ AgeClass, data = boar)
+
+boarplot2 <- ggplot(boar, aes(x= AgeClass, y= Tb))+
+  geom_point()+
+  stat_smooth(method="glm", method.args =list(family = "binomial"), level = 0)+
+  xlab("Age Class of boars")+
+  ylab("Tb infection")+
+  theme_bw()
+
+boarplot2
+
+summary(boarplot2)
+#box-plot- t-test
+
+```
+
+#HOMEWORK PROBLEM 
+1.  Pick two of these variables that are not highly correlated. Use binomial glm's to determine if these factors influence Elaphostrongylus cervi infection.  
+```{r}
+
+# Importing datasets
+tbdeer=read.csv("Tbdeer.txt", sep = "\t")
+head(tbdeer) #just checking out the data!!
+#View(tbdeer) #wanted to look at the wholeeeeee data
+
+tbdeer$DeerNegTB = tbdeer$DeerSampledTB - tbdeer$DeerPosTB
+tbdeer$DeerNegCervi = tbdeer$DeerSampledCervi - tbdeer$DeerPosCervi
+tbdeer$BoarNegTB = tbdeer$BoarSampledTB - tbdeer$BoarPosTB
+tbdeer$Fenced=as.factor(tbdeer$Fenced)
+
+tbdeer=na.omit(tbdeer)
+# Creating columns to calculate ratios to help plot
+tbdeer$DeerNegRatioCervi = tbdeer$DeerNegCervi/tbdeer$DeerSampledCervi
+tbdeer$DeerPosRatioCervi = tbdeer$DeerPosCervi/tbdeer$DeerSampledCervi
+tbdeer$BoarNegRatioTB = tbdeer$BoarNegTB/tbdeer$BoarSampledTB
+
+#Two IVs cannot be positively correlating so to check that I'll be using cor.test
+
+cor.test(tbdeer$OpenLand, tbdeer$QuercusPlants) #The p-value we get from this cor test is 0.8524 which is greater than 0.05, and that means that the variables I've picked are not correlated to each other and can be used. 
+
+#now that the correlation worry is out of the picture, let's see if these factors influence the infection or not. 
+#We will be using binomial glm here, because we've already been told that "They sampled deer and boars from 32 different farms, and the number of animals sampled on each farm differed." this is indicating to "binomial count data" because "REPLICATES ARE GROUPS OF INDIVIDUALS."
+
+```
+
+# Null Hypothesis:
+% of land surrounding farm that was open and the quercus plants there do not influence Elaphostrongylus cervi infection in deer.
+
+# Alternate Hypothesis:
+% of land surrounding farm that was open and the quercus plants there influence Elaphostrongylus cervi infection in deer.
+
+```{r deer_model}
+# glm for deer E.cervi infection
+deer_model=glm(cbind(DeerNegCervi, DeerPosCervi)~OpenLand + QuercusPlants , data = tbdeer, family = "binomial")
+summary(deer_model)
+
+#ANOVA: 
+anova(deer_model, test = "Chi")
+
+#more means that they're more likely to have the disease, negative means that they're not.
+```
+
+2. Use a similar approach to determine if these factors affect Tb prevalance in boars (switch out the deer infection variables for boar infection). Annotate your code to explain your choices and the steps you take.  There is more than one "correct" way to do these analyses, and thus potentially more than one "correct" answer.  
+
+```{r}
+#Boar_model: 
+
+boar_model=glm(cbind(BoarNegTB,BoarPosTB)~OpenLand + QuercusPlants, data = tbdeer, family = "binomial")
+summary(boar_model)
+
+anova(boar_model, test = "Chi")
+
+```
+
+3.  Make a figure for each result. This probalby will be hard, and you will have to do some googling. Try to describe what you think it should look like. You might not solve this one, but do your best and share your findings with others.
+
+```{r}
+#PLOT: 
+neg <- ggplot(tbdeer, aes(x=QuercusPlants, y=DeerNegRatioCervi, color=OpenLand)) + 
+  geom_point() + 
+  stat_smooth(method="glm", method.args = list(family="binomial")) + 
+  theme_bw() 
+
+neg
+
+
+boar_neg=ggplot(data = tbdeer, aes(x=QuercusPlants, y=BoarNegRatioTB, color=OpenLand)) + 
+  geom_point() +
+  stat_smooth(method="glm", method.args = list(family="binomial")) + 
+  theme_bw() + 
+  xlab("Open Land") +
+  ylab("Ratio of Boar tested -ve for TB infection")
+
+boar_neg
+
+```
+
+4. Read and work through the code for the mixed model blog post (Hajduk 2016). Include the code in your homework. Also, read McGill (2015) about random vs fixed factors. Both are linked on Canvas.
+
+```{r}
+#Loading the libraries, usually written at the top of the .rmd file
+library(lme4)
+library(stargazer)
+load("dragons.Rdata")
+```
+
+
+```{r}
+hist(dragons$testScore)
+
+dragons$bodyLength2 <- scale(dragons$bodyLength) 
+basic.lm <- lm(testScore ~ bodyLength2, data = dragons)
+summary(basic.lm)
+```
+
+```{r}
+ggplot(dragons, aes(x = bodyLength, y = testScore)) +
+  geom_point() +
+  geom_smooth(method = "lm")
+```
+
+```{r}
+plot(basic.lm, which = 1)  # not perfect... 
+#but since this is a fictional example we will go with it
+#for your own data be careful:the bigger the sample size, the less of a trend you'd expect to see
+
+plot(basic.lm, which = 2)  # a bit off at the extremes, but that's often the case; again doesn't look too bad
+```
+
+```{r}
+boxplot(testScore ~ mountainRange, data = dragons)  # certainly looks like something is going on here
+
+# colouring points by mountain range
+ggplot(dragons, aes(x = bodyLength, y = testScore, colour = mountainRange)) +
+  geom_point(size = 2) +
+  theme_classic() +
+  theme(legend.position = "none") #gosh it looks so pretty. I need to paint. 
+```
+
+#From the above plots it looks like our mountain ranges vary both in the dragon body length and in their test scores. This confirms that our observations from within each of the ranges aren’t independent. We can’t ignore that.
+
+```{r}
+# run multiple analysis
+ggplot(aes(bodyLength, testScore), data = dragons) + geom_point() + 
+facet_wrap(~ mountainRange) + xlab("length") + ylab("test score")
+```
+
+```{r}
+#Add mountain range as a fixed effect to our basic.lm
+
+mountain.lm <- lm(testScore ~ bodyLength2 + mountainRange, data = dragons)
+summary(mountain.lm)
+```
+# Mixed effects models
+```{r}
+#We will fit the random effect using (1|variableName):
+
+mixed.lmer <- lmer(testScore ~ bodyLength2 + (1|mountainRange), data = dragons)
+summary(mixed.lmer)
+
+#Keep in mind that the random effect of the mountain range is meant to capture all the influences of mountain ranges on dragon test scores - whether we observed those influences explicitly or not, whether those influences are big or small etc. It could be many, many teeny-tiny influences that, when combined, affect the test scores and that’s what we are hoping to control for.
+
+plot(mixed.lmer)  # looks alright, no paterns evident
+
+
+qqnorm(resid(mixed.lmer))
+qqline(resid(mixed.lmer))  # points fall nicely onto the line - yay!
+```
+
+```{r}
+summary(mixed.lmer)
+
+dragons <- within(dragons, sample <- factor(mountainRange:site))
+
+mixed.WRONG <- lmer(testScore ~ bodyLength2 + (1|mountainRange) + (1|site), data = dragons)  # treats the two random effects as if they are crossed
+
+mixed.lmer2 <- lmer(testScore ~ bodyLength2 + (1|mountainRange) + (1|sample), data = dragons)  # the syntax stays the same, but now the nesting is taken into account
+summary(mixed.lmer2)
+```
+
+```{r}
+#Let’s plot this again - visualizing what’s going on is always helpful. You should be able to see eight mountain ranges with three sites (different colour points) within them, with a line fitted through each site.
+
+ggplot(dragons, aes(x = bodyLength, y = testScore, colour = site)) +
+  facet_wrap(~mountainRange, nrow=3) +
+  geom_point() +
+  theme_classic() +
+  geom_line(data = cbind(dragons, pred = predict(mixed.lmer2)), aes(y = pred)) +
+  theme(legend.position = "none")
+```
+#Once you get your model you have to present it in a nicer form.
+
+```{r}
+stargazer(mixed.lmer2, type = "text",
+          digits = 3,
+          star.cutoffs = c(0.05, 0.01, 0.001),
+          digit.separator = "")
+```
+
+#Fit the models, a full model and a reduced model in which we dropped our fixed effect (bodyLength2):
+
+```{r}
+full.lmer <- lmer(testScore ~ bodyLength2 + (1|mountainRange) + (1|sample), 
+				  data = dragons, REML = FALSE)
+reduced.lmer <- lmer(testScore ~ 1 + (1|mountainRange) + (1|sample), 
+					     data = dragons, REML = FALSE)
+
+anova(reduced.lmer, full.lmer)  # the two models are not significantly different
+```

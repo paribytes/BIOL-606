@@ -1,0 +1,240 @@
+---
+title: "BIOL606_hw_Lecture01_Shah"
+output: html_document
+date: "2023-01-23"
+---
+```{r setup, include=FALSE}
+library(tidyverse)
+library(readr)
+library(ggplot2)
+```
+
+
+```{r} 
+#1: Calculate mean and standard deviation of cumulative June-August C uptake ("CumC_uptake_Jun_Aug")
+
+arcticdata= read_csv("NEE_snowmelt_Biol606.csv") #import data
+
+#View(arcticdata)
+
+mean(arcticdata$CumC_uptake_Jun_Aug, na.rm = TRUE) #na.rm will remove the NA values in the dataset
+
+sd(arcticdata$CumC_uptake_Jun_Aug, na.rm = TRUE)
+
+```
+
+```{r}
+#2. Calculate the length of the snow free period using the day the last snow melted (SNOW_MELT_ DATE_MODIS) and the day of the first fall snowfall (SNOW_FALL_START_MODIS)
+
+
+df = data.frame(arcticdata$SNOW_FALL_START_MODIS, arcticdata$SNOW_MELT_DATE_MODIS)
+
+high = arcticdata$SNOW_FALL_START_MODIS
+
+low = arcticdata$SNOW_MELT_DATE_MODIS
+
+snow_free_period = high - low 
+print(snow_free_period)
+
+#DIFFERENT SOLUTION BY NICK AND LUKE
+
+snow_free_length <- snowmelt$SNOW_FALL_START_MODIS - snowmelt$SNOW_MELT_DATE_MODIS
+snow_free_length
+```
+
+
+
+```{r}
+#3. log transform precipitation_Jun_Aug and create a dataframe that includes the non-log transformed and the log-transformed precipitation variables, and the length of the snow free period. Save it as a .csv file.
+
+logprecip <- log(arcticdata$precipitation_Jun_Aug) #log transform
+
+df <- data.frame(arcticdata$precipitation_Jun_Aug,logprecip, snow_free_period) #created a dataframe
+
+print(df)
+
+write.csv(df, "C://Users//priya//Documents//SDSU SEM 2//BIOL 606 Biological Data//saved_precipitation.csv", row.names = FALSE)
+
+```
+
+
+```{r}
+#4. Look at the file you created and check what it looks like. Note that the commands for mean and standard deviation produce a single number, but log-transforming creates a vector of numbers that can be stored as a new variable.
+
+library(readr)
+View(df)
+
+tocheck = read.csv("C://Users//priya//Documents//SDSU SEM 2//BIOL 606 Biological Data//Saved_precipitation.csv")
+
+#checking if results are in a single digit
+
+mean(arcticdata$precipitation_Jun_Aug, na.rm = TRUE)
+sd(arcticdata$precipitation_Jun_Aug, na.rm = TRUE)
+
+#checking if results are in a vector
+
+logprecip
+
+#renaming the variable 
+logprecip -> transf_log
+
+transf_log
+
+```
+
+
+
+```{r}
+#5. Look at the hypotheses below. Make a simple plot illustrating H1 and another for H2. What kind of plot did you make?
+
+# H1, plot snow_free_length against fall temperature, which here is the variable airT_Sept_mean:
+plot(snow_free_period ~ airT_Sept_mean, data=arcticdata)
+# This uses the "~" to mean "as a function of," which we will use in defining statistical models too. 
+# Alternatively, you could have written it as:
+# plot(x = arcticdata$airT_Sept_mean, y = arcticdata$snow_free_period)
+
+# H2, plot carbon uptake, which is CumC_uptake_Jun_Aug, against the snow melt date SNOW_MELT_DATE_MODIS. Note that I worded the hypothesis differently, so now it gives the indepedent variable first and the dependent variable second. 
+plot(x = arcticdata$SNOW_MELT_DATE_MODIS, y = arcticdata$CumC_uptake_Jun_Aug)
+# In this approach, I give the variables to be plotted with a comma in between, and it reads the first as the x-axis values and the other as the y-axis values. 
+
+# They're scatterplots! Why? Because all the variables we've used here are continuous (numerical) variables. 
+
+
+```
+
+
+```{r}
+#6. Start a new code chunk for Monday's assigned reading (Beckerman et al. chapter 4), and use it to create the code in the reading, including your own annotations too.
+
+
+#i. Simple, plain, bivariate scatterplot 
+compensation <- read.csv('compensation.csv')
+ggplot(compensation, aes(x= Root, y= Fruit)) + 
+  geom_point()
+
+
+#ii. plotting basics with ggplot
+#load the libraries needed
+library(dplyr)
+library(ggplot2)
+
+# clear the decks
+rm(list = ls())
+
+# get the data
+compensation <- read.csv('compensation.csv')
+
+# check out the data
+glimpse(compensation)
+# make my first ggplot picture
+ggplot(compensation, aes(x = Root, y = Fruit)) +
+geom_point()
+
+#iii. Grey background
+ggplot(compensation, aes(x = Root, y = Fruit)) +
+geom_point() +
+theme_bw()  #black and white theme
+
+
+#iv. increase the size of the points
+ggplot(compensation, aes(x = Root, y = Fruit)) +
+geom_point(size = 5) +
+theme_bw()
+
+
+
+#v. alter x and y labels
+
+ggplot(compensation, aes(x = Root, y = Fruit)) +
+geom_point(size = 5) +
+xlab("Root Biomass") +
+ylab("Fruit Production") +
+theme_bw()
+
+
+#vi. adjust colors of the points to match specific levels in a group (handy in relating figures to statistical models)
+
+ggplot(compensation, aes(x = Root, y = Fruit, colour = Grazing)) +
+geom_point(size = 5) +
+xlab("Root Biomass") +
+ylab("Fruit Production") +
+theme_bw()
+
+
+#vii. Changing the shape 
+
+ggplot(compensation, aes(x = Root, y = Fruit, shape = Grazing)) +
+geom_point(size = 5) +
+xlab("Root Biomass") +
+ylab("Fruit Production") +
+theme_bw()
+
+
+#viii. ALL IN ONE
+
+rm(list = ls())
+# get the data
+compensation <- read.csv('compensation.csv')
+
+# check out the data
+glimpse(compensation)
+
+# make my first ggplot picture
+# theme_bw() gets rid of the grey
+# size alters the points
+# colour and shape are part of the aesthetics
+# and assign colours and shapes to levels of a factor
+ggplot(compensation, aes(x = Root, y = Fruit, colour = Grazing)) +
+geom_point(size = 5) +
+xlab("Root Biomass") +
+ylab("Fruit Production") +
+theme_bw()
+
+#BOX AND WHISKER PLOT ENTRY
+
+#ignored the Root variable
+
+ggplot(compensation, aes(x = Grazing, y = Fruit)) +
+geom_boxplot() +
+xlab("Grazing treatment") +
+ylab("Fruit Production") +
+theme_bw()
+
+#declaring the data frame with aesthetics
+
+ggplot(compensation, aes(x = Grazing, y = Fruit)) +
+geom_boxplot() +
+geom_point(size = 4, colour = 'lightgrey', alpha = 0.5) +
+xlab("Grazing treatment") +
+ylab("Fruit Production") +
+theme_bw()
+
+
+#Do plants with wider root diameters at the start of the experiment produce more fruit?
+
+#Do grazed or ungrazed plants produce more fruit.
+
+# HISTOGRAM ENTRY
+
+ggplot(compensation, aes(x = Fruit)) +
+geom_histogram()
+
+
+ggplot(compensation, aes(x = Fruit)) +
+geom_histogram(bins = 10)
+ggplot(compensation, aes(x = Fruit)) +
+geom_histogram(binwidth = 15)
+
+
+ggplot(compensation, aes(x = Fruit)) +
+geom_histogram(binwidth = 15) +
+facet_wrap(~Grazing)
+
+ggsave("ThatCoolHistogramOfFruit.png")
+
+```
+
+
+
+
+

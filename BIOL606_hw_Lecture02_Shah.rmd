@@ -1,0 +1,61 @@
+---
+title: "BIOL606_hw_Lecture02_Shah.rmd"
+output: html_document
+date: "2023-01-23"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+#1. Use the snowmelt data to make each of the two following figures, with plot C uptake against precipitation, with data depicted by site:
+
+library(ggplot2)
+arcticdata <- read.csv("NEE_snowmelt_Biol606.csv")
+
+gggraph <- ggplot(arcticdata, aes(x= CumC_uptake_Jun_Aug, y= precipitation_Jun_Aug , data = SITE))
+gggraph +
+  geom_point(shape= 21, size = 3)+
+  geom_smooth(method = lm)
+
+
+
+
+```
+
+
+
+
+```{r}
+#2. Use the ggplot cheat sheet to update figure 1: add better axis labels, adjust the x- and y-axis ranges, and alter the theme. Can you find other ways to just make the graph easier to read and look prettier in general? Annotate your script to explain how you did it.
+
+
+
+
+
+
+```
+
+
+
+```{r}
+#3. Now update figure 2, including making the values on the x-axis more readable. Can you change the order in which the sites are shown?
+
+
+
+
+
+```
+
+
+```{r}
+#4. Save both of these figures as .pdf files.
+
+
+
+
+
+
+
+```

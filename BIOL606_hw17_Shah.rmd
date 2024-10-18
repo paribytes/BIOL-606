@@ -1,0 +1,86 @@
+---
+title: "BIOL606_hw17_Shah.rmd"
+author: "Priyanshi Shah"
+date: "2023-04-19"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(vegan)
+```
+
+
+#CLASS
+```{r}
+veg <- read.table("bryceveg.txt", header = TRUE, row.names = 1)
+
+sites <- read.table("brycesite.txt", header = TRUE, row.names= 1)
+
+env = with(sites, cbind(elev, av, slope))
+
+env.scale = as.data.frame(scale(env, center = TRUE, scale = TRUE))
+
+
+```
+
+#Switching from scaling 2 to 1 is giving us a diff Triplot depending upon the correlation between different predictor variables
+
+#If the data is smaller, it would be nice to add the site names as well
+#If the data is gigantic, then not adding the site names would be a good idea. 
+
+#we can add a categorical predictor variable (as a factor)
+
+#Predictor variables are the constraints on the ordination 
+
+#weight and loading/ longer vector has more effect ------ PCA WORLD
+
+#Final project 
+STatistical analyses methods not how the data was collected 
+File upload -> Midterm 3 
+
+Same figures with the R code, no tweaking with adobe or picsart 
+
+WHich package to cite?If the package is not doing anythig to recreate and manipulation 
+
+db-rda, ypu're gonna use vegan, so cite that
+if any bioinfo package 
+
+ggplot2, ggfortify do not cite 
+
+A lot, a lot of commenting 
+
+Break your codes into chunks 
+
+e.g file loading, scaling, plotting, analysis
+
+No lines of code in the Word Document
+
+```{r SNAILS DATA}
+snails = read.table('SmallSnailData.txt', header = TRUE, sep = ' ')
+
+shelldata = snails[,2:4]
+
+rownames(shelldata) = as.character(snails$Site)
+
+shell.center = as.data.frame(scale(shelldata))
+
+#Subsetting site data
+
+sitedata = snails[,5:8]
+
+rownames(sitedata) = as.character(snails$Site)
+
+site.center = as.data.frame(scale(sitedata))
+
+```
+
+
+```{r}
+
+
+
+
+```
+
+
